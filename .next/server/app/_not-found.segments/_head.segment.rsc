@@ -1,5 +1,0 @@
-1:"$Sreact.fragment"
-2:I[97367,["/_next/static/chunks/9a86a846708bb433.js","/_next/static/chunks/dd1592e2c6a2885f.js","/_next/static/chunks/cb03d13f250a308e.js","/_next/static/chunks/f549c81039f19bf8.js"],"ViewportBoundary"]
-3:I[97367,["/_next/static/chunks/9a86a846708bb433.js","/_next/static/chunks/dd1592e2c6a2885f.js","/_next/static/chunks/cb03d13f250a308e.js","/_next/static/chunks/f549c81039f19bf8.js"],"MetadataBoundary"]
-4:"$Sreact.suspense"
-0:{"buildId":"YjUAvQf-KLHeeb3zbaWUX","rsc":["$","$1","h",{"children":[["$","meta",null,{"name":"robots","content":"noindex"}],["$","$L2",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","div",null,{"hidden":true,"children":["$","$L3",null,{"children":["$","$4",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"GitGuard - Security & Productivity Dashboard"}],["$","meta","1",{"name":"description","content":"Monitor your GitHub organization security and productivity"}]]}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"loading":null,"isPartial":false}
