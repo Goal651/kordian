@@ -27,9 +27,9 @@ const AppContext = createContext<{
   fetchOrgData: () => Promise<void>;
 }>({
   state: { installed: false, installationId: null, selectedOrg: null, repos: [] },
-  selectOrg: () => {},
-  installApp: () => {},
-  fetchOrgData: async () => {},
+  selectOrg: () => { },
+  installApp: () => { },
+  fetchOrgData: async () => { },
 });
 
 export function GitHubAppProvider({ children }: { children: ReactNode }) {
@@ -53,11 +53,23 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchOrgData = useCallback(async () => {
-    console.log(state)
     if (!state.selectedOrg || !state.installationId) return;
 
     try {
-      const token = "YOUR_GITHUB_APP_TOKEN"; // replace with your backend token flow
+      // 1. Fetch Installation Access Token from backend
+      const tokenRes = await fetch("/api/github/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ installationId: state.installationId }),
+      });
+
+      if (!tokenRes.ok) {
+        throw new Error("Failed to get installation token from backend");
+      }
+
+      const { token } = await tokenRes.json();
+
+      // 2. Use the token to fetch repositories
       const res = await fetch(
         `https://api.github.com/orgs/${state.selectedOrg}/repos`,
         {
@@ -68,25 +80,34 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         }
       );
 
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to fetch repositories");
+      }
+
       const reposData = await res.json();
+
+      if (!Array.isArray(reposData)) {
+        throw new Error("Invalid response from GitHub: expected an array of repositories");
+      }
 
       // Map GitHub API data to your UI structure
       const repos = reposData.map((r: any) => ({
         name: r.name,
-        description: r.description,
+        description: r.description || "",
         language: r.language || "Unknown",
-        languageColor: "#999", // Optional: map language to color
-        visibility: r.private ? "private" : "public",
+        languageColor: "#999",
+        visibility: (r.private ? "private" : "public") as "private" | "public",
         stars: r.stargazers_count,
         forks: r.forks_count,
         lastCommit: new Date(r.pushed_at).toLocaleString(),
-        alerts: 0, // Optional: fetch security alerts if needed
-        status: "healthy", // Optional: compute based on alerts
+        alerts: 0,
+        status: "healthy" as "healthy" | "warning" | "critical",
       }));
 
       setState(prev => ({ ...prev, repos }));
-    } catch (err) {
-      console.error("Failed to fetch repos", err);
+    } catch (err: any) {
+      console.error("Failed to fetch repos:", err.message);
     }
   }, [state.selectedOrg, state.installationId]);
 
