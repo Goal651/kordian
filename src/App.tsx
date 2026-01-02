@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { GitHubAuthProvider } from "./hooks/useGitHubAuth";
+import { GitHubAppProvider } from "./hooks/useGitHubAuth";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Security from "./pages/Security";
@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <GitHubAuthProvider>
+      <GitHubAppProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -35,7 +35,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </GitHubAuthProvider>
+      </GitHubAppProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

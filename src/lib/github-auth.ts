@@ -1,130 +1,59 @@
-// GitHub OAuth Configuration
-// In production, these would come from environment variables
-const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || '';
-const GITHUB_REDIRECT_URI = `${window.location.origin}/auth/callback`;
+// GitHub App Configuration
+// Public values only
+const GITHUB_APP_NAME = 'short-tagline'; // exact app slug
+const GITHUB_CLIENT_ID =
+  import.meta.env.VITE_GITHUB_CLIENT_ID || 'Iv23liKXLDw16D4n0bmQ';
 
-const GITHUB_SCOPES = [
-  'read:org',
-  'repo',
-  'read:user',
-  'user:email',
-].join(' ');
-
-export interface GitHubUser {
-  id: number;
-  login: string;
-  name: string | null;
-  avatar_url: string;
-  email: string | null;
+export interface AppInstallationState {
+  installed: boolean;
+  installationId: number | null;
+  selectedOrg: string | null;
 }
 
-export interface GitHubOrg {
-  id: number;
-  login: string;
-  avatar_url: string;
-  description: string | null;
+const INSTALLATION_STORAGE_KEY = 'github_app_installation';
+
+// Redirect user to GitHub App installation page
+export function getGitHubAppInstallUrl(): string {
+  return `https://github.com/apps/${GITHUB_APP_NAME}/installations/new`;
 }
 
-export interface AuthState {
-  accessToken: string | null;
-  user: GitHubUser | null;
-  orgs: GitHubOrg[];
-  selectedOrg: GitHubOrg | null;
-  isAuthenticated: boolean;
+// Save installation state (optional UX only)
+export function saveInstallationState(
+  state: Partial<AppInstallationState>
+): void {
+  const existing = getInstallationState();
+  sessionStorage.setItem(
+    INSTALLATION_STORAGE_KEY,
+    JSON.stringify({ ...existing, ...state })
+  );
 }
 
-const AUTH_STORAGE_KEY = 'gitguard_auth';
-
-// Get the GitHub OAuth URL
-export function getGitHubAuthUrl(): string {
-  const state = crypto.randomUUID();
-  sessionStorage.setItem('github_oauth_state', state);
-  
-  const params = new URLSearchParams({
-    client_id: GITHUB_CLIENT_ID,
-    redirect_uri: GITHUB_REDIRECT_URI,
-    scope: GITHUB_SCOPES,
-    state,
-  });
-  
-  return `https://github.com/login/oauth/authorize?${params.toString()}`;
-}
-
-// Store auth state in sessionStorage (stateless - cleared on browser close)
-export function saveAuthState(state: Partial<AuthState>): void {
-  const existing = getAuthState();
-  const newState = { ...existing, ...state };
-  sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newState));
-}
-
-// Get auth state from sessionStorage
-export function getAuthState(): AuthState {
-  const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return getDefaultAuthState();
-    }
+export function getInstallationState(): AppInstallationState {
+  const stored = sessionStorage.getItem(INSTALLATION_STORAGE_KEY);
+  if (!stored) {
+    return {
+      installed: false,
+      installationId: null,
+      selectedOrg: null,
+    };
   }
-  return getDefaultAuthState();
-}
 
-function getDefaultAuthState(): AuthState {
-  return {
-    accessToken: null,
-    user: null,
-    orgs: [],
-    selectedOrg: null,
-    isAuthenticated: false,
-  };
-}
-
-// Clear auth state (logout)
-export function clearAuthState(): void {
-  sessionStorage.removeItem(AUTH_STORAGE_KEY);
-  sessionStorage.removeItem('github_oauth_state');
-}
-
-// Verify OAuth state parameter
-export function verifyOAuthState(state: string): boolean {
-  const storedState = sessionStorage.getItem('github_oauth_state');
-  return storedState === state;
-}
-
-// Fetch user data from GitHub API
-export async function fetchGitHubUser(accessToken: string): Promise<GitHubUser> {
-  const response = await fetch('https://api.github.com/user', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch user data');
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return {
+      installed: false,
+      installationId: null,
+      selectedOrg: null,
+    };
   }
-  
-  return response.json();
 }
 
-// Fetch user's organizations
-export async function fetchGitHubOrgs(accessToken: string): Promise<GitHubOrg[]> {
-  const response = await fetch('https://api.github.com/user/orgs', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch organizations');
-  }
-  
-  return response.json();
+export function clearInstallationState(): void {
+  sessionStorage.removeItem(INSTALLATION_STORAGE_KEY);
 }
 
-// Check if GitHub client ID is configured
+// Check if app client ID is configured
 export function isGitHubConfigured(): boolean {
   return Boolean(GITHUB_CLIENT_ID);
 }

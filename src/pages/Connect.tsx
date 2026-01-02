@@ -1,8 +1,8 @@
 import { Github, Shield, Lock, Zap, ArrowRight, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useGitHubAuth } from "@/hooks/useGitHubAuth";
 import { useEffect } from "react";
+import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
 const features = [
   {
@@ -24,27 +24,23 @@ const features = [
 
 export default function Connect() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isConfigured, error, isLoading } = useGitHubAuth();
+  const { state } = useGitHubApp();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
+    if (state.installed) {
+      navigate("/"); // dashboard page
     }
-  }, [isAuthenticated, navigate]);
+  }, [state.installed]);
 
   const handleConnect = () => {
-    if (isConfigured) {
-      login();
-    } else {
-      // Demo mode - go directly to dashboard with mock data
-      navigate("/");
-    }
+    window.location.href = 'https://github.com/apps/short-tagline/installations/new';
   };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="hero-glow fixed inset-0 pointer-events-none" />
-      
+
       <div className="relative w-full max-w-lg">
         {/* Logo and heading */}
         <div className="text-center mb-8 animate-fade-in">
@@ -91,32 +87,16 @@ export default function Connect() {
             ))}
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm mb-4">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
+          
 
           {/* Connect button */}
-          <Button
-            onClick={handleConnect}
-            variant="glow"
-            size="lg"
-            className="w-full group"
-            disabled={isLoading}
-          >
+          <Button onClick={handleConnect} variant="glow" size="lg" className="w-full group">
             <Github className="h-5 w-5" />
-            {isConfigured ? "Connect with GitHub" : "Enter Demo Mode"}
+            Connect Your Organization
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
 
-          {!isConfigured && (
-            <p className="text-xs text-amber-500 text-center mt-2">
-              GitHub OAuth not configured. Running in demo mode.
-            </p>
-          )}
+
 
           <p className="text-xs text-muted-foreground text-center mt-4">
             By connecting, you agree to our{" "}
