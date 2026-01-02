@@ -25,6 +25,7 @@ export function ActivityChart() {
   const languageCounts: Record<string, number> = {};
   state.repos.forEach(repo => {
     const lang = repo.language || "Unknown";
+    if (lang === "Unknown") return; // Skip unknown languages
     languageCounts[lang] = (languageCounts[lang] || 0) + 1;
   });
 
