@@ -55,89 +55,89 @@ export default function Page() {
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="hero-glow fixed inset-0 pointer-events-none" />
 
-            <div className="relative w-full max-w-lg">
+            <div className="relative w-full max-w-2xl">
                 {/* Logo and heading */}
                 <div className="text-center mb-8 animate-fade-in">
                     <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 mb-6 animate-glow">
                         <Github className="h-8 w-8 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2">
-                        <span className="gradient-text">GitGuard</span>
+                    <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
+                        Stop managing your GitHub <br /> organization in the dark. 🛡️✨
                     </h1>
-                    <p className="text-lg text-muted-foreground">
-                        Security & Productivity Dashboard
+                    <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+                        A state-of-the-art, stateless dashboard for maintainers who care about <span className="text-primary font-medium">Security</span>, <span className="text-success font-medium">Readability</span>, and <span className="text-foreground font-medium">Fairness</span>.
                     </p>
                 </div>
 
                 {/* Main card */}
-                <div className="glass-card p-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                    <h2 className="text-xl font-semibold text-foreground mb-2 text-center">
-                        Connect Your Organization
-                    </h2>
-                    <p className="text-sm text-muted-foreground text-center mb-8">
-                        New or existing installation? Click below to authorize GitGuard.
-                    </p>
+                <div className="glass-card p-8 animate-fade-in shadow-2xl border-primary/10" style={{ animationDelay: "0.1s" }}>
 
-                    {/* Features */}
-                    <div className="space-y-4 mb-8">
-                        {features.map((feature, index) => (
-                            <div
-                                key={feature.title}
-                                className="flex items-start gap-4 p-4 rounded-lg bg-secondary/30 animate-slide-in"
-                                style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-                            >
-                                <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-                                    <feature.icon className="h-4 w-4 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-foreground text-sm">
-                                        {feature.title}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                        {feature.description}
-                                    </p>
-                                </div>
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Shield className="h-5 w-5 text-primary" />
+                                <h3 className="font-semibold text-foreground">Real-time Security</h3>
                             </div>
-                        ))}
+                            <p className="text-sm text-muted-foreground">Live scanning of Dependabot, Secrets, and Code Scanning alerts in one view.</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Zap className="h-5 w-5 text-success" />
+                                <h3 className="font-semibold text-foreground">Fair Ranking</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">A custom algorithm that rewards Pull Requests and Reviews—not just raw commits.</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Lock className="h-5 w-5 text-warning" />
+                                <h3 className="font-semibold text-foreground">Privacy-First</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">Stateless. No database. No stored tokens. Your data never leaves your session.</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
+                            <div className="flex items-center gap-2 mb-2">
+                                <ArrowRight className="h-5 w-5 text-purple-400" />
+                                <h3 className="font-semibold text-foreground">High-Altitude View</h3>
+                            </div>
+                            <p className="text-sm text-muted-foreground">Get a clear, filtered overview of 50+ repositories in seconds.</p>
+                        </div>
                     </div>
 
                     {/* Connect button */}
-                    <Button onClick={handleConnect} variant="glow" size="lg" className="w-full group mb-6">
-                        <Github className="h-5 w-5" />
-                        Connect Your Organization
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
+                    <div className="text-center">
+                        <Button onClick={handleConnect} variant="glow" size="lg" className="w-full md:w-auto min-w-[300px] h-12 text-base group mb-6">
+                            <Github className="h-5 w-5 mr-2" />
+                            Scan My Organization
+                            <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                        </Button>
+                    </div>
 
                     <div className="relative mb-6">
                         <div className="absolute inset-0 flex items-center">
                             <span className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or connect manually</span>
+                            <span className="bg-background px-2 text-muted-foreground">Or verify manually</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex gap-2 max-w-sm mx-auto">
                         <Input
-                            placeholder="Installation ID (e.g. 12345678)"
+                            placeholder="Installation ID"
                             value={manualId}
                             onChange={(e) => setManualId(e.target.value)}
                             className="bg-secondary/50"
                         />
                         <Button variant="secondary" onClick={handleManualConnect} disabled={!manualId}>
-                            Verify
+                            Go
                         </Button>
                     </div>
-
-                    <p className="text-xs text-muted-foreground text-center">
-                        <span className="opacity-70">Found in url: github.com/settings/installations/</span>
-                        <span className="font-mono text-primary font-bold">12345678</span>
-                    </p>
                 </div>
 
                 {/* Footer */}
                 <p className="text-xs text-muted-foreground text-center mt-6 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-                    Open source · Stateless · No data storage
+                    Built with 💙 for the Open Source Community
                 </p>
             </div>
         </div>

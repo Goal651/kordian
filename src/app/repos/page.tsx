@@ -26,6 +26,11 @@ const StatusIcon = ({ status }: { status: string }) => {
 import { useRouter } from "next/navigation";
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 export default function Page() {
     const { state, fetchOrgData, isLoading } = useGitHubApp();
@@ -133,13 +138,35 @@ export default function Page() {
                                         {repo.contributors && repo.contributors.length > 0 && (
                                             <div className="flex -space-x-2 overflow-hidden pl-2 border-l border-border/50">
                                                 {repo.contributors.slice(0, 5).map((c) => (
-                                                    <img
-                                                        key={c.login}
-                                                        className="inline-block h-5 w-5 rounded-full ring-2 ring-background grayscale hover:grayscale-0 transition-all"
-                                                        src={c.avatar}
-                                                        alt={c.login}
-                                                        title={c.login}
-                                                    />
+                                                    <HoverCard key={c.login}>
+                                                        <HoverCardTrigger asChild>
+                                                            <img
+                                                                className="inline-block h-5 w-5 rounded-full ring-2 ring-background grayscale hover:grayscale-0 transition-all cursor-pointer"
+                                                                src={c.avatar}
+                                                                alt={c.login}
+                                                            />
+                                                        </HoverCardTrigger>
+                                                        <HoverCardContent className="w-80">
+                                                            <div className="flex justify-between space-x-4">
+                                                                <div className="flex items-center space-x-4">
+                                                                    <div className="rounded-full overflow-hidden h-10 w-10 border border-border">
+                                                                        <img src={c.avatar} alt={c.login} className="h-full w-full object-cover" />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <h4 className="text-sm font-semibold">@{c.login}</h4>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            Repository Contributor
+                                                                        </p>
+                                                                        <div className="flex items-center pt-2">
+                                                                            <span className="text-xs text-muted-foreground">
+                                                                                Active in {repo.name}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </HoverCardContent>
+                                                    </HoverCard>
                                                 ))}
                                                 {repo.contributors.length > 5 && (
                                                     <div className="flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-background bg-secondary text-[10px] font-medium text-muted-foreground">
