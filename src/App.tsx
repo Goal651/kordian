@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { GitHubAppProvider } from "./hooks/useGitHubAuth";
+import { GitHubAppProvider } from "./hooks/useGitHubAuth"; // updated hook
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Security from "./pages/Security";
@@ -13,6 +13,7 @@ import Compliance from "./pages/Compliance";
 import AuthCallback from "./pages/AuthCallback";
 import SelectOrg from "./pages/SelectOrg";
 import NotFound from "./pages/NotFound";
+import Setup from "./pages/Setup"; // new setup page for installation redirect
 
 const queryClient = new QueryClient();
 
@@ -24,14 +25,20 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Dashboard & main pages */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/connect" element={<Index />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/select-org" element={<SelectOrg />} />
+            <Route path="/setup" element={<Setup />} /> {/* new Setup page */}
+
+            {/* Feature pages */}
             <Route path="/security" element={<Security />} />
             <Route path="/members" element={<Members />} />
             <Route path="/repos" element={<Repositories />} />
             <Route path="/compliance" element={<Compliance />} />
+
+            {/* Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
