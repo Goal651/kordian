@@ -32,8 +32,8 @@ export function Sidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-border px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-            <Github className="h-5 w-5 text-primary" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 overflow-hidden">
+            <img src="/logo.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-foreground">GitGuard</h1>

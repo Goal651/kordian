@@ -46,9 +46,9 @@ export default function Page() {
                     </p>
                 </div>
                 <Button variant="glow" className="gap-2" onClick={() => {
-                    fetchOrgData();
-                    fetchMembers();
-                    fetchSecurityAlerts();
+                    fetchOrgData(true);
+                    fetchMembers(true);
+                    fetchSecurityAlerts(true);
                 }}>
                     <RefreshCw className="h-4 w-4" />
                     Run Scan

@@ -54,9 +54,9 @@ const AppContext = createContext<{
   state: AppInstallationState;
   selectOrg: (org: string, installationId: number) => void;
   installApp: () => void;
-  fetchOrgData: () => Promise<void>;
-  fetchMembers: () => Promise<void>;
-  fetchSecurityAlerts: () => Promise<void>;
+  fetchOrgData: (force?: boolean) => Promise<void>;
+  fetchMembers: (force?: boolean) => Promise<void>;
+  fetchSecurityAlerts: (force?: boolean) => Promise<void>;
   updateRankingWeights: (weights: RankingWeights) => void;
 }>({
   state: {
@@ -76,6 +76,9 @@ const AppContext = createContext<{
   updateRankingWeights: () => { },
 });
 
+const CACHE_KEY = "github_app_cache";
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+
 export function GitHubAppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppInstallationState>({
     installed: false,
@@ -89,6 +92,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
   // Hydrate state from sessionStorage on mount
   useEffect(() => {
+    // 1. Hydrate Installation Info
     const stored = sessionStorage.getItem("github_app_installation");
     if (stored) {
       try {
@@ -106,7 +110,45 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse stored installation state", e);
       }
     }
+
+    // 2. Hydrate Data Cache
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
+        const storedOrg = stored ? JSON.parse(stored).selectedOrg : null;
+
+        // Only use cache if it's for the same org and not expired
+        if (org === storedOrg && Date.now() - timestamp < CACHE_DURATION) {
+          setState(prev => ({
+            ...prev,
+            repos: repos || [],
+            members: members || [],
+            alerts: alerts || []
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to parse cache", e);
+      }
+    }
   }, []);
+
+  const saveToCache = (data: Partial<AppInstallationState>) => {
+    const existing = sessionStorage.getItem(CACHE_KEY);
+    let cacheObj = existing ? JSON.parse(existing) : { timestamp: Date.now(), org: state.selectedOrg };
+
+    // Reset timestamp on new data or if org changed
+    if (cacheObj.org !== state.selectedOrg) {
+      cacheObj = { timestamp: Date.now(), org: state.selectedOrg };
+    }
+
+    const newCache = {
+      ...cacheObj,
+      ...data,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
+  };
 
   const selectOrg = useCallback((org: string, installationId: number) => {
     setState(prev => ({ ...prev, installed: true, selectedOrg: org, installationId }));
@@ -114,6 +156,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       "github_app_installation",
       JSON.stringify({ installed: true, selectedOrg: org, installationId })
     );
+    // Clear cache on org switch
+    sessionStorage.removeItem(CACHE_KEY);
   }, []);
 
   const installApp = useCallback(() => {
@@ -136,8 +180,19 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const fetchOrgData = useCallback(async () => {
+  const fetchOrgData = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
+
+    // Check cache
+    if (!force) {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { repos, timestamp, org } = JSON.parse(cached);
+        if (org === state.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
+          return; // Use existing state
+        }
+      }
+    }
 
     try {
       // 1. Fetch Installation Access Token from backend
@@ -203,13 +258,25 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       }));
 
       setState(prev => ({ ...prev, repos }));
+      saveToCache({ repos });
     } catch (err: any) {
       console.error("Failed to fetch repos:", err.message);
     }
   }, [state.selectedOrg, state.installationId]);
 
-  const fetchMembers = useCallback(async () => {
+  const fetchMembers = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
+
+    if (!force) {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { members, timestamp, org } = JSON.parse(cached);
+        if (org === state.selectedOrg && members && Date.now() - timestamp < CACHE_DURATION) {
+          return;
+        }
+      }
+    }
+
     try {
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
@@ -278,13 +345,25 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       }).sort((a: any, b: any) => b.score - a.score);
 
       setState(prev => ({ ...prev, members }));
+      saveToCache({ members });
     } catch (err) {
       console.error("Failed to fetch members via GraphQL", err);
     }
-  }, [state.selectedOrg, state.installationId]);
+  }, [state.selectedOrg, state.installationId, state.rankingWeights]);
 
-  const fetchSecurityAlerts = useCallback(async () => {
+  const fetchSecurityAlerts = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
+
+    if (!force) {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { alerts, timestamp, org } = JSON.parse(cached);
+        if (org === state.selectedOrg && alerts && Date.now() - timestamp < CACHE_DURATION) {
+          return;
+        }
+      }
+    }
+
     try {
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
@@ -350,6 +429,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       }
 
       setState(prev => ({ ...prev, alerts }));
+      saveToCache({ alerts });
     } catch (err) {
       console.error("Failed to fetch security alerts", err);
     }
