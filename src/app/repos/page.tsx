@@ -25,20 +25,23 @@ const StatusIcon = ({ status }: { status: string }) => {
 
 import { useRouter } from "next/navigation";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
 export default function Page() {
-    const { state, fetchOrgData, installApp } = useGitHubApp();
+    const { state, fetchOrgData, isLoading } = useGitHubApp();
     const router = useRouter();
     const [filter, setFilter] = useState<"all" | "healthy" | "warning" | "critical">("all");
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        if (!state.installed) {
+        if (!isLoading && !state.installed) {
             router.push("/connect");
-        } else {
+        } else if (!isLoading && state.installed) {
             fetchOrgData();
         }
-    }, [state.installed, fetchOrgData, router]);
+    }, [isLoading, state.installed, fetchOrgData, router]);
 
+    if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
     // Filter repos if fetched

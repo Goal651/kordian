@@ -20,20 +20,23 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
 export default function Page() {
-    const { state, fetchOrgData, fetchMembers, fetchSecurityAlerts } = useGitHubApp();
+    const { state, fetchOrgData, fetchMembers, fetchSecurityAlerts, isLoading } = useGitHubApp();
     const router = useRouter();
 
     useEffect(() => {
-        if (!state.installed) {
+        if (!isLoading && !state.installed) {
             router.push("/connect");
-        } else {
+        } else if (!isLoading && state.installed) {
             fetchOrgData();
             fetchMembers();
             fetchSecurityAlerts();
         }
-    }, [state.installed, fetchOrgData, fetchMembers, fetchSecurityAlerts, router]);
+    }, [isLoading, state.installed, fetchOrgData, fetchMembers, fetchSecurityAlerts, router]);
 
+    if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
     const totalPrs = state.members.reduce((acc, m) => acc + (m.prs || 0), 0);

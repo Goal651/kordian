@@ -18,12 +18,24 @@ import {
     RefreshCw,
     LogOut
 } from "lucide-react";
-import { useState } from "react";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function Page() {
-    const { state, updateRankingWeights, fetchMembers, disconnect } = useGitHubApp();
-    const [weights, setWeights] = useState(state.rankingWeights);
+    const { state, updateRankingWeights, fetchMembers, disconnect, isLoading } = useGitHubApp();
+    const [weights, setWeights] = useState(state.rankingWeights || { prs: 20, reviews: 15, commits: 2 });
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !state.installed) {
+            router.push("/connect");
+        }
+    }, [isLoading, state.installed, router]);
+
+    if (isLoading) return <LoadingScreen />;
+    if (!state.installed) return null;
 
     const handleSaveWeights = () => {
         updateRankingWeights(weights);

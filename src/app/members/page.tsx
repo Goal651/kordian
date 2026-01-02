@@ -18,20 +18,23 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
 export default function Page() {
-    const { state, fetchMembers } = useGitHubApp();
+    const { state, fetchMembers, isLoading } = useGitHubApp();
     const router = useRouter();
 
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
-        if (!state.installed) {
+        if (!isLoading && !state.installed) {
             router.push("/connect");
-        } else {
+        } else if (!isLoading && state.installed) {
             fetchMembers();
         }
-    }, [state.installed, fetchMembers, router]);
+    }, [isLoading, state.installed, fetchMembers, router]);
 
+    if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
     const members = state.members || [];

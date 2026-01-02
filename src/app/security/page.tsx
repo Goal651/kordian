@@ -18,19 +18,22 @@ import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+
 export default function Page() {
-    const { state, fetchSecurityAlerts } = useGitHubApp();
+    const { state, fetchSecurityAlerts, isLoading } = useGitHubApp();
     const router = useRouter();
     const [filter, setFilter] = useState<"all" | "critical" | "high" | "medium" | "low">("all");
 
     useEffect(() => {
-        if (!state.installed) {
+        if (!isLoading && !state.installed) {
             router.push("/connect");
-        } else {
+        } else if (!isLoading && state.installed) {
             fetchSecurityAlerts();
         }
-    }, [state.installed, fetchSecurityAlerts, router]);
+    }, [isLoading, state.installed, fetchSecurityAlerts, router]);
 
+    if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
     const allAlerts = state.alerts || [];
@@ -175,8 +178,8 @@ export default function Page() {
                                             </div>
                                             <span className="text-xs text-muted-foreground">·</span>
                                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${alert.severity === "critical" ? "border-destructive/50 text-destructive bg-destructive/10" :
-                                                    alert.severity === "high" ? "border-warning/50 text-warning bg-warning/10" :
-                                                        "border-primary/50 text-primary bg-primary/10"
+                                                alert.severity === "high" ? "border-warning/50 text-warning bg-warning/10" :
+                                                    "border-primary/50 text-primary bg-primary/10"
                                                 }`}>
                                                 {alert.type}
                                             </span>

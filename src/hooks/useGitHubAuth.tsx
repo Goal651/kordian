@@ -60,6 +60,7 @@ const AppContext = createContext<{
   fetchSecurityAlerts: (force?: boolean) => Promise<void>;
   updateRankingWeights: (weights: RankingWeights) => void;
   disconnect: () => void;
+  isLoading: boolean;
 }>({
   state: {
     installed: false,
@@ -70,6 +71,7 @@ const AppContext = createContext<{
     alerts: [],
     rankingWeights: { prs: 20, reviews: 15, commits: 2 }
   },
+  isLoading: true,
   selectOrg: () => { },
   installApp: () => { },
   fetchOrgData: async () => { },
@@ -83,6 +85,7 @@ const CACHE_KEY = "github_app_cache";
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 export function GitHubAppProvider({ children }: { children: ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
   const [state, setState] = useState<AppInstallationState>({
     installed: false,
     installationId: null,
@@ -95,45 +98,51 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
   // Hydrate state from localStorage on mount
   useEffect(() => {
-    // 1. Hydrate Installation Info
-    const stored = localStorage.getItem("github_app_installation");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.installed) {
-          setState(prev => ({
-            ...prev,
-            installed: true,
-            selectedOrg: parsed.selectedOrg || null,
-            installationId: parsed.installationId || null,
-            rankingWeights: parsed.rankingWeights || prev.rankingWeights
-          }));
+    const hydrate = async () => {
+      // 1. Hydrate Installation Info
+      const stored = localStorage.getItem("github_app_installation");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.installed) {
+            setState(prev => ({
+              ...prev,
+              installed: true,
+              selectedOrg: parsed.selectedOrg || null,
+              installationId: parsed.installationId || null,
+              rankingWeights: parsed.rankingWeights || prev.rankingWeights
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to parse stored installation state", e);
         }
-      } catch (e) {
-        console.error("Failed to parse stored installation state", e);
       }
-    }
 
-    // 2. Hydrate Data Cache
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      try {
-        const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
-        const storedOrg = stored ? JSON.parse(stored).selectedOrg : null;
+      // 2. Hydrate Data Cache
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
+          const storedOrg = stored ? JSON.parse(stored).selectedOrg : null;
 
-        // Only use cache if it's for the same org and not expired
-        if (org === storedOrg && Date.now() - timestamp < CACHE_DURATION) {
-          setState(prev => ({
-            ...prev,
-            repos: repos || [],
-            members: members || [],
-            alerts: alerts || []
-          }));
+          // Only use cache if it's for the same org and not expired
+          if (org === storedOrg && Date.now() - timestamp < CACHE_DURATION) {
+            setState(prev => ({
+              ...prev,
+              repos: repos || [],
+              members: members || [],
+              alerts: alerts || []
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to parse cache", e);
         }
-      } catch (e) {
-        console.error("Failed to parse cache", e);
       }
-    }
+
+      setIsLoading(false);
+    };
+
+    hydrate();
   }, []);
 
   const saveToCache = (data: Partial<AppInstallationState>) => {
@@ -475,7 +484,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [state.selectedOrg, state.installationId]);
 
   return (
-    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights, disconnect }}>
+    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights, disconnect, isLoading }}>
       {children}
     </AppContext.Provider>
   );

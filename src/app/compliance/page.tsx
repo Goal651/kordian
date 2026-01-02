@@ -33,21 +33,23 @@ const StatusBar = ({ passed, total }: { passed: number; total: number }) => {
     );
 };
 
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
-    const { state, fetchOrgData, fetchSecurityAlerts } = useGitHubApp();
+    const { state, fetchOrgData, fetchSecurityAlerts, isLoading } = useGitHubApp();
     const router = useRouter();
 
     useEffect(() => {
-        if (!state.installed) {
+        if (!isLoading && !state.installed) {
             router.push("/connect");
-        } else {
+        } else if (!isLoading && state.installed) {
             fetchOrgData();
             fetchSecurityAlerts();
         }
-    }, [state.installed, fetchOrgData, fetchSecurityAlerts, router]);
+    }, [isLoading, state.installed, fetchOrgData, fetchSecurityAlerts, router]);
 
+    if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
     const totalRepos = state.repos?.length || 0;
