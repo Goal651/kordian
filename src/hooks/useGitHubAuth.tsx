@@ -476,8 +476,33 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         }));
       }
 
-      setState(prev => ({ ...prev, alerts }));
-      saveToCache({ alerts });
+      // Update repositories with alert data
+      setState(prev => {
+        const updatedRepos = prev.repos.map(repo => {
+          const repoAlerts = alerts.filter(a => a.repo === repo.name);
+          const alertCount = repoAlerts.length;
+
+          let status: "healthy" | "warning" | "critical" = "healthy";
+          if (alertCount > 0) {
+            const hasCritical = repoAlerts.some(a => a.severity === "critical");
+            const hasHigh = repoAlerts.some(a => a.severity === "high");
+            if (hasCritical || hasHigh) {
+              status = "critical";
+            } else {
+              status = "warning";
+            }
+          }
+
+          return {
+            ...repo,
+            alerts: alertCount,
+            status
+          };
+        });
+
+        saveToCache({ alerts, repos: updatedRepos });
+        return { ...prev, alerts, repos: updatedRepos };
+      });
     } catch (err) {
       console.error("Failed to fetch security alerts", err);
     }
