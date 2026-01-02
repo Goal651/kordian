@@ -58,6 +58,7 @@ const AppContext = createContext<{
   fetchMembers: (force?: boolean) => Promise<void>;
   fetchSecurityAlerts: (force?: boolean) => Promise<void>;
   updateRankingWeights: (weights: RankingWeights) => void;
+  disconnect: () => void;
 }>({
   state: {
     installed: false,
@@ -74,6 +75,7 @@ const AppContext = createContext<{
   fetchMembers: async () => { },
   fetchSecurityAlerts: async () => { },
   updateRankingWeights: () => { },
+  disconnect: () => { },
 });
 
 const CACHE_KEY = "github_app_cache";
@@ -158,6 +160,22 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     );
     // Clear cache on org switch
     localStorage.removeItem(CACHE_KEY);
+  }, []);
+
+  const disconnect = useCallback(() => {
+    setState({
+      installed: false,
+      installationId: null,
+      selectedOrg: null,
+      repos: [],
+      members: [],
+      alerts: [],
+      rankingWeights: { prs: 20, reviews: 15, commits: 2 }
+    });
+    localStorage.removeItem("github_app_installation");
+    localStorage.removeItem(CACHE_KEY);
+    sessionStorage.clear(); // Good practice to clear session too
+    window.location.href = "/connect";
   }, []);
 
   const installApp = useCallback(() => {
@@ -436,7 +454,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [state.selectedOrg, state.installationId]);
 
   return (
-    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights }}>
+    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights, disconnect }}>
       {children}
     </AppContext.Provider>
   );

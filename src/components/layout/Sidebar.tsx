@@ -25,7 +25,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { state } = useGitHubApp();
+  const { state, disconnect } = useGitHubApp();
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-sidebar">
@@ -33,7 +33,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-border px-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 overflow-hidden">
-            <img src="/logo.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
+            <img src="/icon.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-foreground">GitGuard</h1>
@@ -70,7 +70,7 @@ export function Sidebar() {
             <Settings className="h-4 w-4" />
             <span>Settings</span>
           </Link>
-          <button className="nav-link w-full text-left hover:text-destructive">
+          <button onClick={() => state.installed && disconnect()} className="nav-link w-full text-left hover:text-destructive">
             <LogOut className="h-4 w-4" />
             <span>Disconnect</span>
           </button>

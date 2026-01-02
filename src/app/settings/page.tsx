@@ -22,7 +22,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function Page() {
-    const { state, updateRankingWeights, fetchMembers } = useGitHubApp();
+    const { state, updateRankingWeights, fetchMembers, disconnect } = useGitHubApp();
     const [weights, setWeights] = useState(state.rankingWeights);
 
     const handleSaveWeights = () => {
@@ -151,7 +151,7 @@ export default function Page() {
                                     <p className="text-sm font-medium text-foreground">App Connection</p>
                                     <p className="text-xs text-muted-foreground">The GitHub App has access to 50+ members and security endpoints.</p>
                                 </div>
-                                <Button variant="destructive" className="gap-2">
+                                <Button variant="destructive" className="gap-2" onClick={() => disconnect()}>
                                     <LogOut className="h-4 w-4" /> Disconnect App
                                 </Button>
                             </div>
