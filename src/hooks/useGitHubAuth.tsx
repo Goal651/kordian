@@ -67,11 +67,24 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         throw new Error("Failed to get installation token from backend");
       }
 
-      const { token } = await tokenRes.json();
+      const { token, org } = await tokenRes.json();
+
+      // If we got an org name from the backend and it doesn't match our current state, update it
+      if (org && org !== state.selectedOrg) {
+        setState(prev => ({ ...prev, selectedOrg: org }));
+        // Also update sessionStorage
+        const stored = sessionStorage.getItem("github_app_installation");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          sessionStorage.setItem("github_app_installation", JSON.stringify({ ...parsed, selectedOrg: org }));
+        }
+      }
+
+      const currentOrg = org || state.selectedOrg;
 
       // 2. Use the token to fetch repositories
       const res = await fetch(
-        `https://api.github.com/orgs/${state.selectedOrg}/repos`,
+        `https://api.github.com/orgs/${currentOrg}/repos`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

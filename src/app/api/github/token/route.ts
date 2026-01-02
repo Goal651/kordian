@@ -56,7 +56,29 @@ export async function POST(req: Request) {
         }
 
         const data = await res.json();
-        return NextResponse.json({ token: data.token });
+
+        // 3. Fetch installation details to get the organization name (account name)
+        const installationRes = await fetch(
+            `https://api.github.com/app/installations/${installationId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${gitHubJwt}`,
+                    Accept: "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+            }
+        );
+
+        let orgName = null;
+        if (installationRes.ok) {
+            const installData = await installationRes.json();
+            orgName = installData.account?.login;
+        }
+
+        return NextResponse.json({
+            token: data.token,
+            org: orgName
+        });
     } catch (error: any) {
         console.error("API Route Error:", error);
         return NextResponse.json(
