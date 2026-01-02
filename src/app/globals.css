@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+    :root {
+        --background: 222 47% 6%;
+        --foreground: 210 40% 96%;
+
+        --card: 222 47% 8%;
+        --card-foreground: 210 40% 96%;
+
+        --popover: 222 47% 8%;
+        --popover-foreground: 210 40% 96%;
+
+        --primary: 190 95% 50%;
+        --primary-foreground: 222 47% 6%;
+
+        --secondary: 222 30% 14%;
+        --secondary-foreground: 210 40% 90%;
+
+        --muted: 222 30% 12%;
+        --muted-foreground: 215 20% 55%;
+
+        --accent: 190 95% 50%;
+        --accent-foreground: 222 47% 6%;
+
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 210 40% 98%;
+
+        --success: 152 76% 45%;
+        --success-foreground: 222 47% 6%;
+
+        --warning: 38 95% 55%;
+        --warning-foreground: 222 47% 6%;
+
+        --border: 222 30% 16%;
+        --input: 222 30% 16%;
+        --ring: 190 95% 50%;
+
+        --radius: 0.75rem;
+
+        --glow-primary: 0 0 20px hsl(190 95% 50% / 0.3);
+        --glow-success: 0 0 20px hsl(152 76% 45% / 0.3);
+        --glow-warning: 0 0 20px hsl(38 95% 55% / 0.3);
+        --glow-destructive: 0 0 20px hsl(0 84% 60% / 0.3);
+
+        --sidebar-background: 222 47% 7%;
+        --sidebar-foreground: 210 40% 90%;
+        --sidebar-primary: 190 95% 50%;
+        --sidebar-primary-foreground: 222 47% 6%;
+        --sidebar-accent: 222 30% 14%;
+        --sidebar-accent-foreground: 210 40% 96%;
+        --sidebar-border: 222 30% 16%;
+        --sidebar-ring: 190 95% 50%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground font-sans antialiased;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+    }
+}
+
+@layer components {
+    .glass-card {
+        @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
+        background: linear-gradient(135deg,
+                hsl(var(--card) / 0.9) 0%,
+                hsl(var(--card) / 0.7) 100%);
+    }
+
+    .glow-border {
+        @apply relative;
+    }
+
+    .glow-border::before {
+        content: '';
+        @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300;
+        background: linear-gradient(135deg, hsl(var(--primary) / 0.2), transparent);
+    }
+
+    .glow-border:hover::before {
+        @apply opacity-100;
+    }
+
+    .stat-card {
+        @apply glass-card p-6 hover:border-primary/30 transition-all duration-300;
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--glow-primary);
+    }
+
+    .status-success {
+        @apply text-success;
+    }
+
+    .status-warning {
+        @apply text-warning;
+    }
+
+    .status-critical {
+        @apply text-destructive;
+    }
+
+    .badge-success {
+        @apply bg-success/15 text-success border border-success/30 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-warning {
+        @apply bg-warning/15 text-warning border border-warning/30 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-critical {
+        @apply bg-destructive/15 text-destructive border border-destructive/30 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-info {
+        @apply bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .nav-link {
+        @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-all duration-200;
+    }
+
+    .nav-link.active {
+        @apply text-primary bg-primary/10 border border-primary/20;
+    }
+
+    .gradient-text {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-cyan-300;
+    }
+
+    .hero-glow {
+        background: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.15), transparent);
+    }
+}
+
+@layer utilities {
+    .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .animate-glow {
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+        from {
+            box-shadow: 0 0 10px hsl(var(--primary) / 0.2);
+        }
+
+        to {
+            box-shadow: 0 0 25px hsl(var(--primary) / 0.4);
+        }
+    }
+}

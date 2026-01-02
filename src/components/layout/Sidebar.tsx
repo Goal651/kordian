@@ -1,4 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Shield,
@@ -19,7 +22,7 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const location = useLocation();
+  const pathname = usePathname();
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-sidebar">
@@ -41,11 +44,11 @@ export function Sidebar() {
             Navigation
           </p>
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = pathname === item.path;
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                href={item.path}
                 className={`nav-link ${isActive ? "active" : ""}`}
               >
                 <item.icon className="h-4 w-4" />
@@ -55,9 +58,8 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Bottom section */}
         <div className="border-t border-border p-4">
-          <Link to="/settings" className="nav-link">
+          <Link href="/settings" className="nav-link">
             <Settings className="h-4 w-4" />
             <span>Settings</span>
           </Link>

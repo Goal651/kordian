@@ -1,7 +1,7 @@
 // GitHub App Configuration (Public values only)
 const GITHUB_APP_NAME = 'short-tagline'; // exact GitHub App slug
 const GITHUB_CLIENT_ID =
-  import.meta.env.VITE_GITHUB_CLIENT_ID || 'Iv23liKXLDw16D4n0bmQ';
+  process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || 'Iv23liKXLDw16D4n0bmQ';
 
 export interface AppInstallationState {
   installed: boolean;
