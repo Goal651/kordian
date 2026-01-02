@@ -90,10 +90,10 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     rankingWeights: { prs: 20, reviews: 15, commits: 2 }
   });
 
-  // Hydrate state from sessionStorage on mount
+  // Hydrate state from localStorage on mount
   useEffect(() => {
     // 1. Hydrate Installation Info
-    const stored = sessionStorage.getItem("github_app_installation");
+    const stored = localStorage.getItem("github_app_installation");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -112,7 +112,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     }
 
     // 2. Hydrate Data Cache
-    const cached = sessionStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       try {
         const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
@@ -134,7 +134,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveToCache = (data: Partial<AppInstallationState>) => {
-    const existing = sessionStorage.getItem(CACHE_KEY);
+    const existing = localStorage.getItem(CACHE_KEY);
     let cacheObj = existing ? JSON.parse(existing) : { timestamp: Date.now(), org: state.selectedOrg };
 
     // Reset timestamp on new data or if org changed
@@ -147,17 +147,17 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       ...data,
       timestamp: Date.now()
     };
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
   };
 
   const selectOrg = useCallback((org: string, installationId: number) => {
     setState(prev => ({ ...prev, installed: true, selectedOrg: org, installationId }));
-    sessionStorage.setItem(
+    localStorage.setItem(
       "github_app_installation",
       JSON.stringify({ installed: true, selectedOrg: org, installationId })
     );
     // Clear cache on org switch
-    sessionStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_KEY);
   }, []);
 
   const installApp = useCallback(() => {
@@ -167,7 +167,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   const updateRankingWeights = useCallback((weights: RankingWeights) => {
     setState(prev => {
       const newState = { ...prev, rankingWeights: weights };
-      sessionStorage.setItem(
+      localStorage.setItem(
         "github_app_installation",
         JSON.stringify({
           installed: newState.installed,
@@ -185,7 +185,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
     // Check cache
     if (!force) {
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { repos, timestamp, org } = JSON.parse(cached);
         if (org === state.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
@@ -211,11 +211,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       // If we got an org name from the backend and it doesn't match our current state, update it
       if (org && org !== state.selectedOrg) {
         setState(prev => ({ ...prev, selectedOrg: org }));
-        // Also update sessionStorage
-        const stored = sessionStorage.getItem("github_app_installation");
+        // Also update localStorage
+        const stored = localStorage.getItem("github_app_installation");
         if (stored) {
           const parsed = JSON.parse(stored);
-          sessionStorage.setItem("github_app_installation", JSON.stringify({ ...parsed, selectedOrg: org }));
+          localStorage.setItem("github_app_installation", JSON.stringify({ ...parsed, selectedOrg: org }));
         }
       }
 
@@ -268,7 +268,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     if (!state.selectedOrg || !state.installationId) return;
 
     if (!force) {
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { members, timestamp, org } = JSON.parse(cached);
         if (org === state.selectedOrg && members && Date.now() - timestamp < CACHE_DURATION) {
@@ -355,7 +355,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     if (!state.selectedOrg || !state.installationId) return;
 
     if (!force) {
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { alerts, timestamp, org } = JSON.parse(cached);
         if (org === state.selectedOrg && alerts && Date.now() - timestamp < CACHE_DURATION) {

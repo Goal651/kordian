@@ -62,7 +62,7 @@ export default function Page() {
                         Connect Your Organization
                     </h2>
                     <p className="text-sm text-muted-foreground text-center mb-8">
-                        Authorize GitGuard to analyze your GitHub organization's security posture
+                        New or existing installation? Click below to authorize GitGuard.
                     </p>
 
                     {/* Features */}
