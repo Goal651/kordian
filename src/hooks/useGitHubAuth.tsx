@@ -34,6 +34,12 @@ export interface SecurityAlert {
   path: string;
 }
 
+export interface RankingWeights {
+  prs: number;
+  reviews: number;
+  commits: number;
+}
+
 export interface AppInstallationState {
   installed: boolean;
   installationId: number | null;
@@ -41,6 +47,7 @@ export interface AppInstallationState {
   repos: Repository[];
   members: Member[];
   alerts: SecurityAlert[];
+  rankingWeights: RankingWeights;
 }
 
 const AppContext = createContext<{
@@ -50,13 +57,23 @@ const AppContext = createContext<{
   fetchOrgData: () => Promise<void>;
   fetchMembers: () => Promise<void>;
   fetchSecurityAlerts: () => Promise<void>;
+  updateRankingWeights: (weights: RankingWeights) => void;
 }>({
-  state: { installed: false, installationId: null, selectedOrg: null, repos: [], members: [], alerts: [] },
+  state: {
+    installed: false,
+    installationId: null,
+    selectedOrg: null,
+    repos: [],
+    members: [],
+    alerts: [],
+    rankingWeights: { prs: 20, reviews: 15, commits: 2 }
+  },
   selectOrg: () => { },
   installApp: () => { },
   fetchOrgData: async () => { },
   fetchMembers: async () => { },
   fetchSecurityAlerts: async () => { },
+  updateRankingWeights: () => { },
 });
 
 export function GitHubAppProvider({ children }: { children: ReactNode }) {
@@ -67,6 +84,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     repos: [],
     members: [],
     alerts: [],
+    rankingWeights: { prs: 20, reviews: 15, commits: 2 }
   });
 
   // Hydrate state from sessionStorage on mount
@@ -80,7 +98,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
             ...prev,
             installed: true,
             selectedOrg: parsed.selectedOrg || null,
-            installationId: parsed.installationId || null
+            installationId: parsed.installationId || null,
+            rankingWeights: parsed.rankingWeights || prev.rankingWeights
           }));
         }
       } catch (e) {
@@ -99,6 +118,22 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
   const installApp = useCallback(() => {
     window.location.href = "https://github.com/apps/short-tagline/installations/new";
+  }, []);
+
+  const updateRankingWeights = useCallback((weights: RankingWeights) => {
+    setState(prev => {
+      const newState = { ...prev, rankingWeights: weights };
+      sessionStorage.setItem(
+        "github_app_installation",
+        JSON.stringify({
+          installed: newState.installed,
+          selectedOrg: newState.selectedOrg,
+          installationId: newState.installationId,
+          rankingWeights: newState.rankingWeights
+        })
+      );
+      return newState;
+    });
   }, []);
 
   const fetchOrgData = useCallback(async () => {
@@ -238,7 +273,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           commits,
           prs,
           reviews,
-          score: (prs * 20) + (reviews * 15) + (commits * 2) // Even fairer weighting: PRs and Reviews are most valuable
+          score: (prs * state.rankingWeights.prs) + (reviews * state.rankingWeights.reviews) + (commits * state.rankingWeights.commits)
         };
       }).sort((a: any, b: any) => b.score - a.score);
 
@@ -321,7 +356,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [state.selectedOrg, state.installationId]);
 
   return (
-    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts }}>
+    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights }}>
       {children}
     </AppContext.Provider>
   );
