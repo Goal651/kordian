@@ -1,30 +1,43 @@
 import { AlertTriangle, Bug, Key, Package } from "lucide-react";
 
-const alerts = [
-  {
-    type: "Dependabot",
-    icon: Package,
-    critical: 3,
-    high: 8,
-    medium: 12,
-  },
-  {
-    type: "Code Scanning",
-    icon: Bug,
-    critical: 1,
-    high: 4,
-    medium: 7,
-  },
-  {
-    type: "Secret Scanning",
-    icon: Key,
-    critical: 2,
-    high: 0,
-    medium: 1,
-  },
-];
+import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
 export function SecurityAlertsCard() {
+  const { state } = useGitHubApp();
+
+  const totalCritical = state.alerts.filter(a => a.severity === "critical").length;
+  const totalHigh = state.alerts.filter(a => a.severity === "high").length;
+  const totalMedium = state.alerts.filter(a => a.severity === "medium").length;
+  const totalLow = state.alerts.filter(a => a.severity === "low").length;
+
+  const dependabotCritical = state.alerts.filter(a => a.type === "Dependency" && a.severity === "critical").length;
+  const dependabotHigh = state.alerts.filter(a => a.type === "Dependency" && a.severity === "high").length;
+  const dependabotMedium = state.alerts.filter(a => a.type === "Dependency" && a.severity === "medium").length;
+
+  const alertsDisplay = [
+    {
+      type: "Dependabot",
+      icon: Package,
+      critical: dependabotCritical,
+      high: dependabotHigh,
+      medium: dependabotMedium,
+    },
+    {
+      type: "Code Scanning",
+      icon: Bug,
+      critical: 0,
+      high: 0,
+      medium: 0,
+    },
+    {
+      type: "Secret Scanning",
+      icon: Key,
+      critical: 0,
+      high: 0,
+      medium: 0,
+    },
+  ];
+
   return (
     <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
       <div className="flex items-center gap-3 mb-6">
@@ -38,7 +51,7 @@ export function SecurityAlertsCard() {
       </div>
 
       <div className="space-y-4">
-        {alerts.map((alert) => (
+        {alertsDisplay.map((alert) => (
           <div
             key={alert.type}
             className="flex items-center justify-between rounded-lg bg-secondary/50 p-4"
@@ -59,6 +72,9 @@ export function SecurityAlertsCard() {
               {alert.medium > 0 && (
                 <span className="badge-info">{alert.medium} Medium</span>
               )}
+              {alert.critical === 0 && alert.high === 0 && alert.medium === 0 && (
+                <span className="text-xs text-muted-foreground">No open alerts</span>
+              )}
             </div>
           </div>
         ))}
@@ -67,7 +83,7 @@ export function SecurityAlertsCard() {
       <div className="mt-4 pt-4 border-t border-border">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Total Alerts</span>
-          <span className="font-mono font-semibold text-foreground">38</span>
+          <span className="font-mono font-semibold text-foreground">{state.alerts.length}</span>
         </div>
       </div>
     </div>
