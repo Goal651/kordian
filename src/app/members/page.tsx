@@ -50,19 +50,19 @@ export default function Page() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div className="stat-card animate-fade-in">
                     <p className="text-sm text-muted-foreground mb-1">Total Members</p>
-                    <p className="text-2xl font-bold text-foreground">24</p>
+                    <p className="text-2xl font-bold text-foreground">{members.length}</p>
                 </div>
                 <div className="stat-card animate-fade-in" style={{ animationDelay: "0.05s" }}>
                     <p className="text-sm text-muted-foreground mb-1">Active (30d)</p>
-                    <p className="text-2xl font-bold text-success">21</p>
+                    <p className="text-2xl font-bold text-success">{members.filter(m => (m.prs || 0) > 0 || (m.commits || 0) > 0).length}</p>
                 </div>
                 <div className="stat-card animate-fade-in" style={{ animationDelay: "0.1s" }}>
                     <p className="text-sm text-muted-foreground mb-1">Inactive</p>
-                    <p className="text-2xl font-bold text-warning">3</p>
+                    <p className="text-2xl font-bold text-warning">{members.filter(m => (m.prs || 0) === 0 && (m.commits || 0) === 0).length}</p>
                 </div>
                 <div className="stat-card animate-fade-in" style={{ animationDelay: "0.15s" }}>
                     <p className="text-sm text-muted-foreground mb-1">Pending Invites</p>
-                    <p className="text-2xl font-bold text-muted-foreground">2</p>
+                    <p className="text-2xl font-bold text-muted-foreground">0</p>
                 </div>
             </div>
 
@@ -78,7 +78,7 @@ export default function Page() {
                                 dataKey="name"
                                 type="category"
                                 tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-                                width={60}
+                                width={80}
                             />
                             <Tooltip
                                 contentStyle={{
@@ -96,7 +96,7 @@ export default function Page() {
                 </div>
                 <div className="flex gap-6 mt-4 pt-4 border-t border-border">
                     <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-sm bg-primary" />
+                        <div className="h-3 w-3 rounded-sm bg-[hsl(190,95%,50%)]" />
                         <span className="text-sm text-muted-foreground">Commits</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -142,8 +142,12 @@ export default function Page() {
                                 <tr key={member.username} className="hover:bg-secondary/30 transition-colors">
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                                                {member.avatar}
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 overflow-hidden text-xs font-semibold text-primary">
+                                                {member.avatar?.startsWith("http") ? (
+                                                    <img src={member.avatar} alt={member.username} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    member.avatar
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="font-medium text-foreground">{member.name}</p>

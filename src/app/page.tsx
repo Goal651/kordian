@@ -30,6 +30,9 @@ export default function Page() {
         }
     }, [state.installed, fetchOrgData, fetchMembers, fetchSecurityAlerts]);
 
+    const totalPrs = state.members.reduce((acc, m) => acc + (m.prs || 0), 0);
+    const totalCommits = state.members.reduce((acc, m) => acc + (m.commits || 0), 0);
+
     return (
         <DashboardLayout>
             {/* Header */}
@@ -71,9 +74,9 @@ export default function Page() {
                     iconColor="success"
                 />
                 <StatCard
-                    title="Commits (30d)"
-                    value="1,284"
-                    change="+12% from last month"
+                    title="Activity (PRs)"
+                    value={totalPrs.toString()}
+                    change={`${totalCommits} aggregate commits`}
                     changeType="positive"
                     icon={GitCommit}
                     iconColor="primary"

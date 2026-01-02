@@ -183,45 +183,68 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       });
       const { token } = await tokenRes.json();
 
-      // 1. Fetch member list
-      const res = await fetch(`https://api.github.com/orgs/${state.selectedOrg}/members`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-
-      // 2. Fetch recent PRs to aggregate stats (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
 
-      const searchRes = await fetch(
-        `https://api.github.com/search/issues?q=org:${state.selectedOrg}+type:pr+created:>${dateStr}&per_page=100`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const searchData = await searchRes.json();
+      const query = `
+        query($org: String!, $from: DateTime!) {
+          organization(login: $org) {
+            membersWithRole(first: 50) {
+              nodes {
+                login
+                name
+                avatarUrl
+                contributionsCollection(from: $from) {
+                  totalCommitContributions
+                  totalPullRequestContributions
+                  totalPullRequestReviewContributions
+                }
+              }
+            }
+          }
+        }
+      `;
 
-      const prCounts: Record<string, number> = {};
-      if (searchData.items) {
-        searchData.items.forEach((item: any) => {
-          const login = item.user.login;
-          prCounts[login] = (prCounts[login] || 0) + 1;
-        });
-      }
+      const res = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables: {
+            org: state.selectedOrg,
+            from: thirtyDaysAgo.toISOString(),
+          },
+        }),
+      });
 
-      const members = data.map((m: any) => ({
-        name: m.login,
-        username: m.login,
-        avatar: m.login.substring(0, 2).toUpperCase(),
-        role: "Member",
-        status: "active",
-        commits: Math.floor(Math.random() * 50), // Mock commits for now as per-user commit search is complex
-        prs: prCounts[m.login] || 0,
-        reviews: Math.floor(Math.random() * 20)  // Mock reviews
-      }));
+      const json = await res.json();
+      const nodes = json.data?.organization?.membersWithRole?.nodes || [];
+
+      const members = nodes.map((node: any) => {
+        const stats = node.contributionsCollection;
+        const commits = stats.totalCommitContributions;
+        const prs = stats.totalPullRequestContributions;
+        const reviews = stats.totalPullRequestReviewContributions;
+
+        return {
+          name: node.name || node.login,
+          username: node.login,
+          avatar: node.avatarUrl,
+          role: "Member",
+          status: "active",
+          commits,
+          prs,
+          reviews,
+          score: (prs * 20) + (reviews * 15) + (commits * 2) // Even fairer weighting: PRs and Reviews are most valuable
+        };
+      }).sort((a: any, b: any) => b.score - a.score);
 
       setState(prev => ({ ...prev, members }));
     } catch (err) {
-      console.error("Failed to fetch members", err);
+      console.error("Failed to fetch members via GraphQL", err);
     }
   }, [state.selectedOrg, state.installationId]);
 

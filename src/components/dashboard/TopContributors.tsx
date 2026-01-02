@@ -23,8 +23,12 @@ export function TopContributors() {
               className="flex items-center justify-between rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                  {contributor.avatar}
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 overflow-hidden text-xs font-semibold text-primary">
+                  {contributor.avatar?.startsWith("http") ? (
+                    <img src={contributor.avatar} alt={contributor.username} className="h-full w-full object-cover" />
+                  ) : (
+                    contributor.avatar
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">
