@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 
+export interface Contributor {
+  login: string;
+  avatar: string;
+}
+
 export interface Repository {
   name: string;
   description: string;
@@ -11,6 +16,7 @@ export interface Repository {
   lastCommit: string;
   status: "healthy" | "warning" | "critical";
   alerts: number;
+  contributors: Contributor[];
 }
 
 export interface Member {
@@ -211,96 +217,114 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   const fetchOrgData = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
 
-    // Check cache
     if (!force) {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { repos, timestamp, org } = JSON.parse(cached);
         if (org === state.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
-          return; // Use existing state
+          return;
         }
       }
     }
 
     try {
-      // 1. Fetch Installation Access Token from backend
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ installationId: state.installationId }),
       });
-
-      if (!tokenRes.ok) {
-        throw new Error("Failed to get installation token from backend");
-      }
-
       const { token, org } = await tokenRes.json();
 
-      // If we got an org name from the backend and it doesn't match our current state, update it
       if (org && org !== state.selectedOrg) {
         setState(prev => ({ ...prev, selectedOrg: org }));
-        // Also update localStorage
-        const stored = localStorage.getItem("github_app_installation");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          localStorage.setItem("github_app_installation", JSON.stringify({ ...parsed, selectedOrg: org }));
-        }
       }
 
       const currentOrg = org || state.selectedOrg;
 
-      // 2. Use the token to fetch ALL repositories (handle pagination)
-      let allRepos: any[] = [];
-      let page = 1;
-      let hasNextPage = true;
-
-      while (hasNextPage) {
-        const res = await fetch(
-          `https://api.github.com/orgs/${currentOrg}/repos?per_page=100&page=${page}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/vnd.github+json",
-            },
+      const query = `
+        query($org: String!) {
+          organization(login: $org) {
+            repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
+              nodes {
+                name
+                description
+                isPrivate
+                stargazersCount
+                forksCount
+                pushedAt
+                languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
+                  nodes {
+                    name
+                    color
+                  }
+                }
+                defaultBranchRef {
+                  target {
+                    ... on Commit {
+                      history(first: 5) {
+                        nodes {
+                          author {
+                            user {
+                              login
+                              avatarUrl
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
-        );
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error(`Failed to fetch page ${page}:`, errorData);
-          break;
         }
+      `;
 
-        const pageData = await res.json();
+      const res = await fetch("https://api.github.com/graphql", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables: { org: currentOrg },
+        }),
+      });
 
-        if (!Array.isArray(pageData)) {
-          break;
-        }
+      const json = await res.json();
+      const nodes = json.data?.organization?.repositories?.nodes || [];
 
-        allRepos = [...allRepos, ...pageData];
+      const repos = nodes.map((r: any) => {
+        // Extract contributors from commit history
+        const commits = r.defaultBranchRef?.target?.history?.nodes || [];
+        const contributorsMap = new Map();
+        commits.forEach((c: any) => {
+          if (c.author?.user) {
+            contributorsMap.set(c.author.user.login, {
+              login: c.author.user.login,
+              avatar: c.author.user.avatarUrl
+            });
+          }
+        });
+        const contributors = Array.from(contributorsMap.values());
 
-        if (pageData.length < 100) {
-          hasNextPage = false;
-        } else {
-          page++;
-        }
-      }
+        const languageNode = r.languages?.nodes?.[0];
 
-      const reposData = allRepos; // Compatible with existing map logic
-
-      // Map GitHub API data to your UI structure
-      const repos = reposData.map((r: any) => ({
-        name: r.name,
-        description: r.description || "",
-        language: r.language || "Unknown",
-        languageColor: "#999",
-        visibility: (r.private ? "private" : "public") as "private" | "public",
-        stars: r.stargazers_count,
-        forks: r.forks_count,
-        lastCommit: new Date(r.pushed_at).toLocaleString(),
-        alerts: 0,
-        status: "healthy" as "healthy" | "warning" | "critical",
-      }));
+        return {
+          name: r.name,
+          description: r.description || "",
+          language: languageNode?.name || "Unknown",
+          languageColor: languageNode?.color || "#999",
+          visibility: r.isPrivate ? "private" : "public",
+          stars: r.stargazersCount,
+          forks: r.forksCount,
+          lastCommit: new Date(r.pushedAt).toLocaleString(),
+          alerts: 0,
+          status: "healthy",
+          contributors
+        };
+      });
 
       setState(prev => ({ ...prev, repos }));
       saveToCache({ repos });
@@ -381,7 +405,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           username: node.login,
           avatar: node.avatarUrl,
           role: "Member",
-          status: "active",
+          status: (commits + prs + reviews > 0) ? "active" : "inactive",
           commits,
           prs,
           reviews,

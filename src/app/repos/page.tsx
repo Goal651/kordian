@@ -113,7 +113,7 @@ export default function Page() {
                                         )}
                                     </div>
                                     <p className="text-sm text-muted-foreground mb-3">{repo.description}</p>
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                         <div className="flex items-center gap-1.5">
                                             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: repo.languageColor }} />
                                             <span>{repo.language}</span>
@@ -130,6 +130,24 @@ export default function Page() {
                                             <Clock className="h-3.5 w-3.5" />
                                             <span>{repo.lastCommit}</span>
                                         </div>
+                                        {repo.contributors && repo.contributors.length > 0 && (
+                                            <div className="flex -space-x-2 overflow-hidden pl-2 border-l border-border/50">
+                                                {repo.contributors.slice(0, 5).map((c) => (
+                                                    <img
+                                                        key={c.login}
+                                                        className="inline-block h-5 w-5 rounded-full ring-2 ring-background grayscale hover:grayscale-0 transition-all"
+                                                        src={c.avatar}
+                                                        alt={c.login}
+                                                        title={c.login}
+                                                    />
+                                                ))}
+                                                {repo.contributors.length > 5 && (
+                                                    <div className="flex h-5 w-5 items-center justify-center rounded-full ring-2 ring-background bg-secondary text-[10px] font-medium text-muted-foreground">
+                                                        +{repo.contributors.length - 5}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <Button variant="ghost" size="sm">View Details</Button>
