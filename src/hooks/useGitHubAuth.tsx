@@ -249,8 +249,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
                 name
                 description
                 isPrivate
-                stargazersCount
-                forksCount
+                stargazerCount
+                forkCount
                 pushedAt
                 languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
                   nodes {
@@ -317,8 +317,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           language: languageNode?.name || "Unknown",
           languageColor: languageNode?.color || "#999",
           visibility: r.isPrivate ? "private" : "public",
-          stars: r.stargazersCount,
-          forks: r.forksCount,
+          stars: r.stargazerCount,
+          forks: r.forkCount,
           lastCommit: new Date(r.pushedAt).toLocaleString(),
           alerts: 0,
           status: "healthy",
