@@ -183,6 +183,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       const storedToken = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
       if (storedToken) {
         setState(prev => ({ ...prev, currentUserToken: storedToken }));
+      } else {
+        // No token found, set status to not_installed
+        setState(prev => ({ ...prev, installationStatus: 'not_installed' }));
       }
 
       // 2. Hydrate installations
