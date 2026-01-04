@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,27 @@ export function OrganizationSelector() {
     installToOrganization,
     isLoading
   } = useGitHubApp();
+
+  const [isSwitching, setIsSwitching] = useState<number | null>(null);
+  const [isInstalling, setIsInstalling] = useState(false);
+
+  const handleSwitchInstallation = async (installationId: number) => {
+    setIsSwitching(installationId);
+    try {
+      await switchInstallation(installationId);
+    } finally {
+      setIsSwitching(null);
+    }
+  };
+
+  const handleInstallApp = async () => {
+    setIsInstalling(true);
+    try {
+      await installApp();
+    } finally {
+      setIsInstalling(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -102,8 +124,17 @@ export function OrganizationSelector() {
                       Active
                     </Badge>
                   )}
-                  <Button variant="ghost" size="sm">
-                    <SwitchCamera className="h-4 w-4" />
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleSwitchInstallation(installation.installationId)}
+                    disabled={isSwitching === installation.installationId || isLoading}
+                  >
+                    {isSwitching === installation.installationId ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <SwitchCamera className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -111,12 +142,21 @@ export function OrganizationSelector() {
           </div>
           
           <div className="pt-4 border-t space-y-2">
-            <Button onClick={installApp} variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              {state.currentUserToken 
-                ? "Install to Another Organization (OAuth)" 
-                : "Install GitGuard (OAuth)"
-              }
+            <Button onClick={handleInstallApp} variant="outline" className="w-full" disabled={isInstalling || isLoading}>
+              {isInstalling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Installing...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {state.currentUserToken 
+                    ? "Install to Another Organization (OAuth)" 
+                    : "Install GitGuard (OAuth)"
+                  }
+                </>
+              )}
             </Button>
             <Button onClick={installToOrganization} variant="secondary" className="w-full">
               <Plus className="h-4 w-4 mr-2" />

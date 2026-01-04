@@ -55,6 +55,7 @@ export default function Page() {
     const [showManualInput, setShowManualInput] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
+    const [isCheckingInstallations, setIsCheckingInstallations] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
 
     // Check for OAuth errors in URL
@@ -70,6 +71,15 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
+        // Track when we're checking installations
+        if (state.installationStatus === 'checking') {
+            setIsCheckingInstallations(true);
+        } else {
+            setIsCheckingInstallations(false);
+        }
+    }, [state.installationStatus]);
+
+    useEffect(() => {
         // Only redirect if we're not in the middle of connecting/redirecting
         if (state.installed && state.selectedOrg && !isConnecting && !isRedirecting) {
             setIsRedirecting(true);
@@ -79,7 +89,9 @@ export default function Page() {
 
     const handleConnect = async () => {
         // Use the smart installation logic
+        setIsConnecting(true);
         await installApp();
+        // Note: isConnecting will be reset when the page reloads after OAuth
     };
 
     const handleSelectOrganization = (org: any) => {
@@ -106,18 +118,21 @@ export default function Page() {
         }, 100);
     };
 
-    // Show loading while checking installations
-    if (isLoading) {
+    // Show loading while checking installations or connecting
+    if (isLoading || isCheckingInstallations) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <div className="hero-glow fixed inset-0 pointer-events-none" />
                 <div className="relative text-center glass-card p-8 max-w-md">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-foreground mb-2">
-                        Checking installations...
+                        {isConnecting ? 'Connecting to GitHub...' : 'Checking installations...'}
                     </h2>
                     <p className="text-muted-foreground text-sm">
-                        Please wait while we check your GitHub app installations.
+                        {isConnecting 
+                            ? 'Please wait while we connect to your GitHub account.'
+                            : 'Please wait while we check your GitHub app installations.'
+                        }
                     </p>
                 </div>
             </div>
@@ -232,12 +247,17 @@ export default function Page() {
                             variant="glow" 
                             size="lg" 
                             className="w-full md:w-auto min-w-[300px] h-12 text-base group mb-6"
-                            disabled={isConnecting || isLoading}
+                            disabled={isConnecting || isLoading || isCheckingInstallations}
                         >
                             {isConnecting ? (
                                 <>
                                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                                     Connecting to GitHub...
+                                </>
+                            ) : isLoading || isCheckingInstallations ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                    Checking installations...
                                 </>
                             ) : (
                                 <>
@@ -264,7 +284,7 @@ export default function Page() {
                                 variant="outline"
                                 onClick={() => setShowManualInput(true)}
                                 className="w-full md:w-auto"
-                                disabled={isRedirecting}
+                                disabled={isRedirecting || isConnecting || isLoading || isCheckingInstallations}
                             >
                                 Enter Installation ID Manually
                             </Button>
@@ -276,9 +296,9 @@ export default function Page() {
                                 value={manualId}
                                 onChange={(e) => setManualId(e.target.value)}
                                 className="bg-secondary/50"
-                                disabled={isRedirecting}
+                                disabled={isRedirecting || isConnecting || isLoading || isCheckingInstallations}
                             />
-                            <Button variant="secondary" onClick={handleManualConnect} disabled={!manualId || isRedirecting}>
+                            <Button variant="secondary" onClick={handleManualConnect} disabled={!manualId || isRedirecting || isConnecting || isLoading || isCheckingInstallations}>
                                 Go
                             </Button>
                         </div>
