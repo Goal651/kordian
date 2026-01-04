@@ -287,7 +287,21 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         } else {
           setState(prev => ({ ...prev, installationStatus: 'not_installed' }));
         }
+      } else if (response.status === 401) {
+        // Token is invalid, clear it and reset state
+        console.error('Token is invalid or expired, clearing and redirecting to OAuth');
+        localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.INSTALLATIONS);
+        setState(prev => ({
+          ...prev,
+          currentUserToken: null,
+          installations: [],
+          installationStatus: 'not_installed'
+        }));
+        // Trigger OAuth flow
+        installApp();
       } else {
+        console.error('Failed to fetch installations:', response.status, response.statusText);
         setState(prev => ({ ...prev, installationStatus: 'error' }));
       }
     } catch (error) {
@@ -324,6 +338,21 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           installedAt: inst.created_at,
           installedBy: data.user?.login || "unknown"
         }));
+      } else if (response.status === 401) {
+        // Token is invalid, clear it and reset state
+        console.error('Token is invalid or expired in getUserInstallations, clearing and redirecting to OAuth');
+        localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.INSTALLATIONS);
+        setState(prev => ({
+          ...prev,
+          currentUserToken: null,
+          installations: [],
+          installationStatus: 'not_installed'
+        }));
+        // Trigger OAuth flow
+        installApp();
+      } else {
+        console.error('Failed to get user installations:', response.status, response.statusText);
       }
     } catch (error) {
       console.error("Error getting user installations:", error);
