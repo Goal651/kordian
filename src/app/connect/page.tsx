@@ -1,11 +1,12 @@
 "use client";
 
-import { Github, Shield, Lock, Zap, ArrowRight } from "lucide-react";
+import { Github, Shield, Lock, Zap, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
+import { OrganizationSelector } from "@/components/OrganizationSelector";
 
 const features = [
     {
@@ -27,17 +28,19 @@ const features = [
 
 export default function Page() {
     const router = useRouter();
-    const { state, selectOrg, fetchOrgData } = useGitHubApp();
+    const { state, selectOrg, fetchOrgData, installApp, isLoading, checkExistingInstallations } = useGitHubApp();
     const [manualId, setManualId] = useState("");
+    const [showManualInput, setShowManualInput] = useState(false);
 
     useEffect(() => {
-        if (state.installed) {
+        if (state.installed && state.selectedOrg) {
             router.push("/"); // dashboard page
         }
-    }, [state.installed, router]);
+    }, [state.installed, state.selectedOrg, router]);
 
-    const handleConnect = () => {
-        window.location.href = 'https://github.com/apps/git-guard-app/installations/new';
+    const handleConnect = async () => {
+        // Use the smart installation logic
+        await installApp();
     };
 
     const handleManualConnect = () => {
@@ -51,6 +54,35 @@ export default function Page() {
         }, 100);
     };
 
+    // Show loading while checking installations
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+                <div className="hero-glow fixed inset-0 pointer-events-none" />
+                <div className="relative text-center glass-card p-8 max-w-md">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-foreground mb-2">
+                        Checking installations...
+                    </h2>
+                    <p className="text-muted-foreground text-sm">
+                        Please wait while we check your GitHub app installations.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // If we have installations but none selected, show the organization selector
+    if (state.installationStatus === 'installed' && state.installations.length > 0 && !state.selectedOrg) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+                <div className="hero-glow fixed inset-0 pointer-events-none" />
+                <OrganizationSelector />
+            </div>
+        );
+    }
+
+    // If no installations found, show the main connect page
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="hero-glow fixed inset-0 pointer-events-none" />
@@ -122,17 +154,29 @@ export default function Page() {
                         </div>
                     </div>
 
-                    <div className="flex gap-2 max-w-sm mx-auto">
-                        <Input
-                            placeholder="Installation ID"
-                            value={manualId}
-                            onChange={(e) => setManualId(e.target.value)}
-                            className="bg-secondary/50"
-                        />
-                        <Button variant="secondary" onClick={handleManualConnect} disabled={!manualId}>
-                            Go
-                        </Button>
-                    </div>
+                    {!showManualInput ? (
+                        <div className="text-center">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setShowManualInput(true)}
+                                className="w-full md:w-auto"
+                            >
+                                Enter Installation ID Manually
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex gap-2 max-w-sm mx-auto">
+                            <Input
+                                placeholder="Installation ID"
+                                value={manualId}
+                                onChange={(e) => setManualId(e.target.value)}
+                                className="bg-secondary/50"
+                            />
+                            <Button variant="secondary" onClick={handleManualConnect} disabled={!manualId}>
+                                Go
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}

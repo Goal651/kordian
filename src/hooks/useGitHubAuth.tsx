@@ -47,6 +47,15 @@ export interface RankingWeights {
   commits: number;
 }
 
+export interface InstallationInfo {
+  installationId: number;
+  organizationId: number;
+  organizationLogin: string;
+  permissions: Record<string, string>;
+  installedAt: string;
+  installedBy: string;
+}
+
 export interface AppInstallationState {
   installed: boolean;
   installationId: number | null;
@@ -55,7 +64,29 @@ export interface AppInstallationState {
   members: Member[];
   alerts: SecurityAlert[];
   rankingWeights: RankingWeights;
+  installations: InstallationInfo[];
+  currentUserToken: string | null;
+  installationStatus: 'checking' | 'installed' | 'not_installed' | 'error';
 }
+
+
+const STORAGE_KEYS = {
+  INSTALLATION: "github_app_installation",
+  INSTALLATIONS: "github_app_installations",
+  USER_TOKEN: "github_user_token",
+  CACHE: "github_app_cache"
+};
+
+const CACHE_DURATION = 15 * 60 * 1000;
+
+const GITHUB_CONFIG = {
+  APP_NAME: "git-guard-app",
+  CLIENT_ID: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
+  REDIRECT_URI: typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/auth/callback` 
+    : '',
+  SCOPE: "read:org read:user read:project"
+};
 
 const AppContext = createContext<{
   state: AppInstallationState;
@@ -67,6 +98,12 @@ const AppContext = createContext<{
   updateRankingWeights: (weights: RankingWeights) => void;
   disconnect: () => void;
   isLoading: boolean;
+  checkExistingInstallations: () => Promise<void>;
+  getUserInstallations: () => Promise<InstallationInfo[]>;
+  handleInstallationCallback: (code: string) => Promise<void>;
+  switchInstallation: (installationId: number) => void;
+  removeInstallation: (installationId: number) => void;
+  installToOrganization: () => void;
 }>({
   state: {
     installed: false,
@@ -75,7 +112,10 @@ const AppContext = createContext<{
     repos: [],
     members: [],
     alerts: [],
-    rankingWeights: { prs: 20, reviews: 15, commits: 2 }
+    rankingWeights: { prs: 20, reviews: 15, commits: 2 },
+    installations: [],
+    currentUserToken: null,
+    installationStatus: 'checking'
   },
   isLoading: true,
   selectOrg: () => { },
@@ -85,10 +125,15 @@ const AppContext = createContext<{
   fetchSecurityAlerts: async () => { },
   updateRankingWeights: () => { },
   disconnect: () => { },
+  checkExistingInstallations: async () => { },
+  getUserInstallations: async () => [],
+  handleInstallationCallback: async () => { },
+  switchInstallation: () => { },
+  removeInstallation: () => { },
+  installToOrganization: () => { },
 });
 
 const CACHE_KEY = "github_app_cache";
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 export function GitHubAppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -99,60 +144,92 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     repos: [],
     members: [],
     alerts: [],
-    rankingWeights: { prs: 20, reviews: 15, commits: 2 }
+    rankingWeights: { prs: 20, reviews: 15, commits: 2 },
+    installations: [],
+    currentUserToken: null,
+    installationStatus: 'checking'
   });
 
-  // Hydrate state from localStorage on mount
+  // Initialize authentication and check for OAuth callback
   useEffect(() => {
-    const hydrate = async () => {
-      // 1. Hydrate Installation Info
-      const stored = localStorage.getItem("github_app_installation");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.installed) {
-            setState(prev => ({
-              ...prev,
-              installed: true,
-              selectedOrg: parsed.selectedOrg || null,
-              installationId: parsed.installationId || null,
-              rankingWeights: parsed.rankingWeights || prev.rankingWeights
-            }));
-          }
-        } catch (e) {
-          console.error("Failed to parse stored installation state", e);
-        }
+    const initializeAuth = async () => {
+      // Check for OAuth callback
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      if (code) {
+        await handleInstallationCallback(code);
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
       }
 
-      // 2. Hydrate Data Cache
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        try {
-          const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
-          const storedOrg = stored ? JSON.parse(stored).selectedOrg : null;
-
-          // Only use cache if it's for the same org and not expired
-          if (org === storedOrg && Date.now() - timestamp < CACHE_DURATION) {
-            setState(prev => ({
-              ...prev,
-              repos: repos || [],
-              members: members || [],
-              alerts: alerts || []
-            }));
-          }
-        } catch (e) {
-          console.error("Failed to parse cache", e);
-        }
-      }
-
+      // Hydrate from storage
+      await hydrateFromStorage();
+      
       setIsLoading(false);
     };
 
-    hydrate();
+    if (typeof window !== 'undefined') {
+      initializeAuth();
+    }
   }, []);
 
+  // Hydrate from localStorage
+  const hydrateFromStorage = async () => {
+    try {
+      // 1. Hydrate user token
+      const storedToken = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
+      if (storedToken) {
+        setState(prev => ({ ...prev, currentUserToken: storedToken }));
+      }
+
+      // 2. Hydrate installations
+      const storedInstallations = localStorage.getItem(STORAGE_KEYS.INSTALLATIONS);
+      if (storedInstallations) {
+        const installations = JSON.parse(storedInstallations);
+        setState(prev => ({ ...prev, installations }));
+      }
+
+      // 3. Hydrate current installation
+      const storedInstallation = localStorage.getItem(STORAGE_KEYS.INSTALLATION);
+      if (storedInstallation) {
+        const { installed, selectedOrg, installationId, rankingWeights } = JSON.parse(storedInstallation);
+        if (installed && installationId) {
+          setState(prev => ({
+            ...prev,
+            installed: true,
+            selectedOrg,
+            installationId,
+            rankingWeights: rankingWeights || prev.rankingWeights,
+            installationStatus: 'installed'
+          }));
+        }
+      }
+
+      // 4. Hydrate cache
+      const cached = localStorage.getItem(STORAGE_KEYS.CACHE);
+      if (cached) {
+        const { repos, members, alerts, timestamp, org } = JSON.parse(cached);
+        const storedOrg = storedInstallation ? JSON.parse(storedInstallation).selectedOrg : null;
+
+        if (org === storedOrg && Date.now() - timestamp < CACHE_DURATION) {
+          setState(prev => ({
+            ...prev,
+            repos: repos || [],
+            members: members || [],
+            alerts: alerts || []
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to hydrate from storage:", error);
+    }
+  };
+
   const saveToCache = (data: Partial<AppInstallationState>) => {
-    const existing = localStorage.getItem(CACHE_KEY);
+    const existing = localStorage.getItem(STORAGE_KEYS.CACHE);
     let cacheObj = existing ? JSON.parse(existing) : { timestamp: Date.now(), org: state.selectedOrg };
 
     // Reset timestamp on new data or if org changed
@@ -165,18 +242,209 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       ...data,
       timestamp: Date.now()
     };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(newCache));
+    localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify(newCache));
   };
 
-  const selectOrg = useCallback((org: string, installationId: number) => {
-    setState(prev => ({ ...prev, installed: true, selectedOrg: org, installationId }));
-    localStorage.setItem(
-      "github_app_installation",
-      JSON.stringify({ installed: true, selectedOrg: org, installationId })
-    );
-    // Clear cache on org switch
-    localStorage.removeItem(CACHE_KEY);
+  // Check for existing installations
+  const checkExistingInstallations = useCallback(async () => {
+    if (!state.currentUserToken) {
+      setState(prev => ({ ...prev, installationStatus: 'not_installed' }));
+      return;
+    }
+
+    setState(prev => ({ ...prev, installationStatus: 'checking' }));
+
+    try {
+      const response = await fetch("/api/github/installations", {
+        headers: {
+          Authorization: `Bearer ${state.currentUserToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.installations && data.installations.length > 0) {
+          // Store installations
+          const installations = data.installations.map((inst: any) => ({
+            installationId: inst.id,
+            organizationId: inst.account.id,
+            organizationLogin: inst.account.login,
+            permissions: inst.permissions,
+            installedAt: inst.created_at,
+            installedBy: data.user?.login || "unknown"
+          }));
+
+          localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installations));
+          
+          setState(prev => ({
+            ...prev,
+            installations,
+            installationStatus: 'installed'
+          }));
+
+          // Auto-select the first installation if none selected
+          if (!state.installationId && installations.length > 0) {
+            selectOrg(installations[0].organizationLogin, installations[0].installationId);
+          }
+        } else {
+          setState(prev => ({ ...prev, installationStatus: 'not_installed' }));
+        }
+      } else {
+        setState(prev => ({ ...prev, installationStatus: 'error' }));
+      }
+    } catch (error) {
+      console.error("Error checking installations:", error);
+      setState(prev => ({ ...prev, installationStatus: 'error' }));
+    }
+  }, [state.currentUserToken, state.installationId]);
+
+  // Check installations when we have a user token
+  useEffect(() => {
+    if (state.currentUserToken) {
+      checkExistingInstallations();
+    }
+  }, [state.currentUserToken, checkExistingInstallations]);
+
+  // Get user installations
+  const getUserInstallations = useCallback(async (): Promise<InstallationInfo[]> => {
+    if (!state.currentUserToken) return [];
+    
+    try {
+      const response = await fetch("/api/github/installations", {
+        headers: {
+          Authorization: `Bearer ${state.currentUserToken}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.installations.map((inst: any) => ({
+          installationId: inst.id,
+          organizationId: inst.account.id,
+          organizationLogin: inst.account.login,
+          permissions: inst.permissions,
+          installedAt: inst.created_at,
+          installedBy: data.user?.login || "unknown"
+        }));
+      }
+    } catch (error) {
+      console.error("Error getting user installations:", error);
+    }
+    
+    return [];
+  }, [state.currentUserToken]);
+
+  // Handle installation callback
+  const handleInstallationCallback = useCallback(async (code: string) => {
+    try {
+      // Exchange code for access token
+      const response = await fetch("/api/github/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!response.ok) throw new Error("Failed to authenticate");
+
+      const { token, installations } = await response.json();
+      
+      // Store token
+      localStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
+      
+      // Process installations
+      if (installations && installations.length > 0) {
+        const installationList = installations.map((inst: any) => ({
+          installationId: inst.id,
+          organizationId: inst.account.id,
+          organizationLogin: inst.account.login,
+          permissions: inst.permissions,
+          installedAt: inst.created_at,
+          installedBy: inst.installedBy || "unknown"
+        }));
+
+        localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installationList));
+        
+        setState(prev => ({
+          ...prev,
+          currentUserToken: token,
+          installations: installationList,
+          installationStatus: 'installed'
+        }));
+
+        // Auto-select first installation
+        if (installationList.length > 0) {
+          selectOrg(installationList[0].organizationLogin, installationList[0].installationId);
+        }
+      } else {
+        // No installations found - redirect to install
+        setState(prev => ({
+          ...prev,
+          currentUserToken: token,
+          installationStatus: 'not_installed'
+        }));
+        installApp();
+      }
+    } catch (error) {
+      console.error("Installation callback error:", error);
+      setState(prev => ({ ...prev, installationStatus: 'error' }));
+    }
   }, []);
+
+  // Switch between installations
+  const switchInstallation = useCallback((installationId: number) => {
+    const installation = state.installations.find(inst => inst.installationId === installationId);
+    if (installation) {
+      selectOrg(installation.organizationLogin, installation.installationId);
+    }
+  }, [state.installations]);
+
+  // Remove installation from list
+  const removeInstallation = useCallback((installationId: number) => {
+    const updatedInstallations = state.installations.filter(
+      inst => inst.installationId !== installationId
+    );
+    
+    localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(updatedInstallations));
+    
+    setState(prev => ({
+      ...prev,
+      installations: updatedInstallations
+    }));
+
+    // If we removed the current installation, clear it
+    if (state.installationId === installationId) {
+      disconnect();
+    }
+  }, [state.installations, state.installationId]);
+
+  const selectOrg = useCallback((org: string, installationId: number) => {
+    setState(prev => ({ 
+      ...prev, 
+      installed: true, 
+      selectedOrg: org, 
+      installationId,
+      installationStatus: 'installed'
+    }));
+    
+    localStorage.setItem(
+      STORAGE_KEYS.INSTALLATION,
+      JSON.stringify({ 
+        installed: true, 
+        selectedOrg: org, 
+        installationId,
+        rankingWeights: state.rankingWeights
+      })
+    );
+    
+    // Clear cache on org switch
+    localStorage.removeItem(STORAGE_KEYS.CACHE);
+    
+    // Fetch data for new org
+    fetchOrgData(true);
+    fetchMembers(true);
+    fetchSecurityAlerts(true);
+  }, [state.rankingWeights]);
 
   const disconnect = useCallback(() => {
     setState({
@@ -186,32 +454,49 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       repos: [],
       members: [],
       alerts: [],
-      rankingWeights: { prs: 20, reviews: 15, commits: 2 }
+      rankingWeights: { prs: 20, reviews: 15, commits: 2 },
+      installations: [],
+      currentUserToken: null,
+      installationStatus: 'not_installed'
     });
-    localStorage.removeItem("github_app_installation");
-    localStorage.removeItem(CACHE_KEY);
-    sessionStorage.clear(); // Good practice to clear session too
-    window.location.href = "/connect";
+    
+    localStorage.removeItem(STORAGE_KEYS.INSTALLATION);
+    localStorage.removeItem(STORAGE_KEYS.CACHE);
+    sessionStorage.clear();
+    
+    // Keep user token and installations for re-use
+    // window.location.href = "/connect";
   }, []);
 
-  const installApp = useCallback(() => {
+  const installApp = useCallback(async () => {
+    // First check if we have a user token and existing installations
+    if (state.currentUserToken) {
+      try {
+        const installations = await getUserInstallations();
+        if (installations.length > 0) {
+          // We have existing installations, just select the first one or show selector
+          const firstInstallation = installations[0];
+          selectOrg(firstInstallation.organizationLogin, firstInstallation.installationId);
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to check existing installations:", error);
+      }
+    }
+
+    // No existing installations or no token, start OAuth flow
+    const authUrl = new URL("https://github.com/login/oauth/authorize");
+    authUrl.searchParams.append("client_id", GITHUB_CONFIG.CLIENT_ID!);
+    authUrl.searchParams.append("redirect_uri", GITHUB_CONFIG.REDIRECT_URI);
+    authUrl.searchParams.append("scope", GITHUB_CONFIG.SCOPE);
+    authUrl.searchParams.append("state", "install");
+    
+    window.location.href = authUrl.toString();
+  }, [state.currentUserToken, getUserInstallations, selectOrg]);
+
+  const installToOrganization = useCallback(() => {
+    // Direct redirect to GitHub installation page
     window.location.href = "https://github.com/apps/git-guard-app/installations/new";
-  }, []);
-
-  const updateRankingWeights = useCallback((weights: RankingWeights) => {
-    setState(prev => {
-      const newState = { ...prev, rankingWeights: weights };
-      localStorage.setItem(
-        "github_app_installation",
-        JSON.stringify({
-          installed: newState.installed,
-          selectedOrg: newState.selectedOrg,
-          installationId: newState.installationId,
-          rankingWeights: newState.rankingWeights
-        })
-      );
-      return newState;
-    });
   }, []);
 
   const fetchOrgData = useCallback(async (force = false) => {
@@ -532,8 +817,41 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     }
   }, [state.selectedOrg, state.installationId]);
 
+  const updateRankingWeights = useCallback((weights: RankingWeights) => {
+    setState(prev => {
+      const newState = { ...prev, rankingWeights: weights };
+      localStorage.setItem(
+        STORAGE_KEYS.INSTALLATION,
+        JSON.stringify({
+          installed: newState.installed,
+          selectedOrg: newState.selectedOrg,
+          installationId: newState.installationId,
+          rankingWeights: newState.rankingWeights
+        })
+      );
+      return newState;
+    });
+  }, []);
+
   return (
-    <AppContext.Provider value={{ state, selectOrg, installApp, fetchOrgData, fetchMembers, fetchSecurityAlerts, updateRankingWeights, disconnect, isLoading }}>
+    <AppContext.Provider value={{ 
+      state, 
+      selectOrg, 
+      installApp, 
+      fetchOrgData, 
+      fetchMembers, 
+      fetchSecurityAlerts, 
+      updateRankingWeights, 
+      disconnect,
+      isLoading,
+      // Installation management
+      checkExistingInstallations,
+      getUserInstallations,
+      handleInstallationCallback,
+      switchInstallation,
+      removeInstallation,
+      installToOrganization
+    }}>
       {children}
     </AppContext.Provider>
   );
