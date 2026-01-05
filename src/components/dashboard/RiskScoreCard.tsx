@@ -9,7 +9,7 @@ const data = [
 const COLORS = ["hsl(152, 76%, 45%)", "hsl(222, 30%, 16%)"];
 
 export function RiskScoreCard() {
-  const score =9;
+  const score =76;
   const getScoreColor = () => {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
