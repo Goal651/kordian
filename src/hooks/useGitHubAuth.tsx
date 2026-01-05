@@ -521,6 +521,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     // window.location.href = "/connect";
   }, []);
 
+  const installToOrganization = useCallback(() => {
+    // Direct redirect to GitHub installation page
+    window.location.href = "https://github.com/apps/git-guard-app/installations/new";
+  }, []);
+
   const installApp = useCallback(async () => {
     // First check if we have a user token and existing installations
     if (state.currentUserToken) {
@@ -551,11 +556,6 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
     window.location.href = authUrl.toString();
   }, [state.currentUserToken, getUserInstallations, selectOrg, installToOrganization]);
-
-  const installToOrganization = useCallback(() => {
-    // Direct redirect to GitHub installation page
-    window.location.href = "https://github.com/apps/git-guard-app/installations/new";
-  }, []);
 
   const fetchOrgData = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
