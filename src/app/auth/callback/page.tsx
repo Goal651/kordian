@@ -30,13 +30,15 @@ function AuthCallbackContent() {
         if (token && user && installations) {
             // OAuth flow - data passed from API route
             try {
-                const userData = JSON.parse(decodeURIComponent(user));
-                const installationsData = JSON.parse(decodeURIComponent(installations));
-                
+                // Values were added to the URL via searchParams.set, so they are already safely encoded.
+                // Parsing them directly avoids decode errors on characters like "@" in emails.
+                const userData = JSON.parse(user);
+                const installationsData = JSON.parse(installations);
+
                 // Store token and installations
                 localStorage.setItem("github_user_token", token);
                 localStorage.setItem("github_app_installations", JSON.stringify(installationsData));
-                
+
                 // Trigger a page reload to ensure the context picks up the new token
                 // This is a simple way to ensure the context re-initializes with the new token
                 window.location.href = "/connect";

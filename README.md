@@ -35,7 +35,7 @@ No database. No stored tokens. GitGuard runs entirely in your browser session (c
 
 ## Tech Stack
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Directory)
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Directory)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS & `shadcn/ui`
 - **Data**: GitHub GraphQL API
