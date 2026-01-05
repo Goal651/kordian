@@ -98,6 +98,13 @@ const AppContext = createContext<{
   updateRankingWeights: (weights: RankingWeights) => void;
   disconnect: () => void;
   isLoading: boolean;
+  loadingStates: {
+    fetchingOrgData: boolean;
+    fetchingMembers: boolean;
+    fetchingAlerts: boolean;
+    fetchingRepos: boolean;
+    fetchingPRs: boolean;
+  };
   checkExistingInstallations: () => Promise<void>;
   getUserInstallations: () => Promise<InstallationInfo[]>;
   handleInstallationCallback: (code: string) => Promise<void>;
@@ -118,6 +125,13 @@ const AppContext = createContext<{
     installationStatus: 'checking'
   },
   isLoading: true,
+  loadingStates: {
+    fetchingOrgData: false,
+    fetchingMembers: false,
+    fetchingAlerts: false,
+    fetchingRepos: false,
+    fetchingPRs: false,
+  },
   selectOrg: () => { },
   installApp: () => { },
   fetchOrgData: async () => { },
@@ -130,7 +144,7 @@ const AppContext = createContext<{
   handleInstallationCallback: async () => { },
   switchInstallation: () => { },
   removeInstallation: () => { },
-  installToOrganization: () => { },
+  installToOrganization: () => { }
 });
 
 const CACHE_KEY = "github_app_cache";
@@ -141,13 +155,26 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     installed: false,
     installationId: null,
     selectedOrg: null,
+    currentUserToken: null,
+    installations: [],
+    installationStatus: 'not_installed',
+    rankingWeights: {
+      prs: 1,
+      reviews: 1,
+      commits: 1
+    },
     repos: [],
     members: [],
     alerts: [],
-    rankingWeights: { prs: 20, reviews: 15, commits: 2 },
-    installations: [],
-    currentUserToken: null,
-    installationStatus: 'checking'
+  });
+
+  // Loading states for different operations
+  const [loadingStates, setLoadingStates] = useState({
+    fetchingOrgData: false,
+    fetchingMembers: false,
+    fetchingAlerts: false,
+    fetchingRepos: false,
+    fetchingPRs: false,
   });
 
   // Initialize authentication and check for OAuth callback
@@ -538,6 +565,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Set loading state
+    setLoadingStates(prev => ({ ...prev, fetchingOrgData: true }));
+
     try {
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
@@ -657,6 +687,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Set loading state
+    setLoadingStates(prev => ({ ...prev, fetchingMembers: true }));
+
     try {
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
@@ -728,6 +761,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       saveToCache({ members });
     } catch (err) {
       console.error("Failed to fetch members via GraphQL", err);
+    } finally {
+      // Reset loading state
+      setLoadingStates(prev => ({ ...prev, fetchingMembers: false }));
     }
   }, [state.selectedOrg, state.installationId, state.rankingWeights]);
 
@@ -743,6 +779,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+
+    // Set loading state
+    setLoadingStates(prev => ({ ...prev, fetchingAlerts: true }));
 
     try {
       const tokenRes = await fetch("/api/github/token", {
@@ -840,6 +879,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       });
     } catch (err) {
       console.error("Failed to fetch security alerts", err);
+    } finally {
+      // Reset loading state
+      setLoadingStates(prev => ({ ...prev, fetchingAlerts: false }));
     }
   }, [state.selectedOrg, state.installationId]);
 
@@ -870,6 +912,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       updateRankingWeights, 
       disconnect,
       isLoading,
+      loadingStates,
       // Installation management
       checkExistingInstallations,
       getUserInstallations,

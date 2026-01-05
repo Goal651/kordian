@@ -15,7 +15,8 @@ export function OrganizationSelector() {
     switchInstallation,
     installApp,
     installToOrganization,
-    isLoading
+    isLoading,
+    loadingStates
   } = useGitHubApp();
 
   const [isSwitching, setIsSwitching] = useState<number | null>(null);
@@ -39,12 +40,12 @@ export function OrganizationSelector() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loadingStates.fetchingOrgData || loadingStates.fetchingMembers || loadingStates.fetchingAlerts) {
     return (
       <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span>Checking installations...</span>
+          <span>Loading data...</span>
         </CardContent>
       </Card>
     );

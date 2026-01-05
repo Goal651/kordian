@@ -50,12 +50,11 @@ const getErrorDescription = (error: string) => {
 
 export default function Page() {
     const router = useRouter();
-    const { state, selectOrg, fetchOrgData, installApp, installToOrganization, isLoading, getUserInstallations } = useGitHubApp();
+    const { state, selectOrg, fetchOrgData, installApp, installToOrganization, isLoading, getUserInstallations, loadingStates } = useGitHubApp();
     const [manualId, setManualId] = useState("");
     const [showManualInput, setShowManualInput] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
-    const [isCheckingInstallations, setIsCheckingInstallations] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
 
     // Check for OAuth errors in URL
@@ -69,15 +68,6 @@ export default function Page() {
             window.history.replaceState({}, '', window.location.pathname);
         }
     }, []);
-
-    useEffect(() => {
-        // Track when we're checking installations
-        if (state.installationStatus === 'checking') {
-            setIsCheckingInstallations(true);
-        } else {
-            setIsCheckingInstallations(false);
-        }
-    }, [state.installationStatus]);
 
     useEffect(() => {
         // Only redirect if we're not in the middle of connecting/redirecting
@@ -119,19 +109,23 @@ export default function Page() {
     };
 
     // Show loading while checking installations or connecting
-    if (isLoading || isCheckingInstallations) {
+    if (isLoading || loadingStates.fetchingOrgData) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <div className="hero-glow fixed inset-0 pointer-events-none" />
                 <div className="relative text-center glass-card p-8 max-w-md">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-foreground mb-2">
-                        {isConnecting ? 'Connecting to GitHub...' : 'Checking installations...'}
+                        {isConnecting ? 'Connecting to GitHub...' : 
+                         loadingStates.fetchingOrgData ? 'Fetching organization data...' : 
+                         'Checking installations...'}
                     </h2>
                     <p className="text-muted-foreground text-sm">
                         {isConnecting 
                             ? 'Please wait while we connect to your GitHub account.'
-                            : 'Please wait while we check your GitHub app installations.'
+                            : loadingStates.fetchingOrgData
+                                ? 'Fetching repositories and security data...'
+                                : 'Please wait while we check your GitHub app installations.'
                         }
                     </p>
                 </div>
@@ -247,14 +241,14 @@ export default function Page() {
                             variant="glow" 
                             size="lg" 
                             className="w-full md:w-auto min-w-[300px] h-12 text-base group mb-6"
-                            disabled={isConnecting || isLoading || isCheckingInstallations}
+                            disabled={isConnecting || isLoading || loadingStates.fetchingOrgData}
                         >
                             {isConnecting ? (
                                 <>
                                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                                     Connecting to GitHub...
                                 </>
-                            ) : isLoading || isCheckingInstallations ? (
+                            ) : isLoading || loadingStates.fetchingOrgData ? (
                                 <>
                                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                                     Checking installations...
