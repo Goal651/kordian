@@ -1,4 +1,4 @@
-import { LucideIcon } from "lucide-react";
+import { Loader2, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import Link from "next/link";
@@ -11,6 +11,7 @@ interface StatCardProps {
   icon: LucideIcon;
   iconColor?: "primary" | "success" | "warning" | "destructive";
   href?: string;
+  loading:boolean
 }
 
 const iconColorClasses = {
@@ -28,6 +29,7 @@ export function StatCard({
   icon: Icon,
   iconColor = "primary",
   href,
+  loading,
 }: StatCardProps) {
   const content = (
     <div className={cn("stat-card animate-fade-in transition-all", href && "hover:shadow-md hover:scale-[1.02] cursor-pointer")}>
@@ -35,7 +37,7 @@ export function StatCard({
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-3xl font-bold tracking-tight text-foreground">
-            {value}
+            {loading ? <Loader2 className="w-8 h-8 animate-spin"/> : value}
           </p>
           {change && (
             <p

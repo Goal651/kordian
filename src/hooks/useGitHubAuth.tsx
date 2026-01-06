@@ -82,8 +82,8 @@ const CACHE_DURATION = 15 * 60 * 1000;
 const GITHUB_CONFIG = {
   APP_NAME: "git-guard-app",
   CLIENT_ID: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
-  REDIRECT_URI: typeof window !== 'undefined' 
-    ? `${window.location.origin}/api/auth/callback` 
+  REDIRECT_URI: typeof window !== 'undefined'
+    ? `${window.location.origin}/api/auth/callback`
     : '',
   SCOPE: "read:org read:user read:project"
 };
@@ -184,7 +184,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const state = urlParams.get('state');
-      
+
       if (code) {
         await handleInstallationCallback(code);
         // Clean URL
@@ -194,7 +194,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
       // Hydrate from storage
       await hydrateFromStorage();
-      
+
       setIsLoading(false);
     };
 
@@ -293,7 +293,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         if (data.installations && data.installations.length > 0) {
           // Store installations
           const installations = data.installations.map((inst: any) => ({
@@ -306,7 +306,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           }));
 
           localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installations));
-          
+
           setState(prev => ({
             ...prev,
             installations,
@@ -350,14 +350,14 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   // Get user installations
   const getUserInstallations = useCallback(async (): Promise<InstallationInfo[]> => {
     if (!state.currentUserToken) return [];
-    
+
     try {
       const response = await fetch("/api/github/installations", {
         headers: {
           Authorization: `Bearer ${state.currentUserToken}`,
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         return data.installations.map((inst: any) => ({
@@ -387,7 +387,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error getting user installations:", error);
     }
-    
+
     return [];
   }, [state.currentUserToken]);
 
@@ -404,10 +404,10 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       if (!response.ok) throw new Error("Failed to authenticate");
 
       const { token, installations } = await response.json();
-      
+
       // Store token
       localStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
-      
+
       // Process installations
       if (installations && installations.length > 0) {
         const installationList = installations.map((inst: any) => ({
@@ -420,7 +420,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         }));
 
         localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installationList));
-        
+
         setState(prev => ({
           ...prev,
           currentUserToken: token,
@@ -457,9 +457,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     const updatedInstallations = state.installations.filter(
       inst => inst.installationId !== installationId
     );
-    
+
     localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(updatedInstallations));
-    
+
     setState(prev => ({
       ...prev,
       installations: updatedInstallations
@@ -472,27 +472,27 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [state.installations, state.installationId]);
 
   const selectOrg = useCallback((org: string, installationId: number) => {
-    setState(prev => ({ 
-      ...prev, 
-      installed: true, 
-      selectedOrg: org, 
+    setState(prev => ({
+      ...prev,
+      installed: true,
+      selectedOrg: org,
       installationId,
       installationStatus: 'installed'
     }));
-    
+
     localStorage.setItem(
       STORAGE_KEYS.INSTALLATION,
-      JSON.stringify({ 
-        installed: true, 
-        selectedOrg: org, 
+      JSON.stringify({
+        installed: true,
+        selectedOrg: org,
         installationId,
         rankingWeights: state.rankingWeights
       })
     );
-    
+
     // Clear cache on org switch
     localStorage.removeItem(STORAGE_KEYS.CACHE);
-    
+
     // Fetch data for new org
     fetchOrgData(true);
     fetchMembers(true);
@@ -512,11 +512,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       currentUserToken: null,
       installationStatus: 'not_installed'
     });
-    
+
     localStorage.removeItem(STORAGE_KEYS.INSTALLATION);
     localStorage.removeItem(STORAGE_KEYS.CACHE);
     sessionStorage.clear();
-    
+
     // Keep user token and installations for re-use
     // window.location.href = "/connect";
   }, []);
@@ -667,11 +667,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           forks: r.forkCount,
           lastCommit: new Date(r.pushedAt).toLocaleString(),
           alerts: 0,
-          status: "healthy",
+          status: "critical",
           contributors
         };
       });
-
+      setLoadingStates(prev => ({ ...prev, fetchingOrgData: false }));
       setState(prev => ({ ...prev, repos }));
       saveToCache({ repos });
     } catch (err: any) {
@@ -907,14 +907,14 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AppContext.Provider value={{ 
-      state, 
-      selectOrg, 
-      installApp, 
-      fetchOrgData, 
-      fetchMembers, 
-      fetchSecurityAlerts, 
-      updateRankingWeights, 
+    <AppContext.Provider value={{
+      state,
+      selectOrg,
+      installApp,
+      fetchOrgData,
+      fetchMembers,
+      fetchSecurityAlerts,
+      updateRankingWeights,
       disconnect,
       isLoading,
       loadingStates,

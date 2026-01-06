@@ -23,7 +23,7 @@ import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 export default function Page() {
-    const { state, fetchOrgData, fetchMembers, fetchSecurityAlerts, isLoading } = useGitHubApp();
+    const { state, fetchOrgData, fetchMembers, fetchSecurityAlerts, isLoading, loadingStates } = useGitHubApp();
     const router = useRouter();
 
     useEffect(() => {
@@ -42,6 +42,12 @@ export default function Page() {
     const totalPrs = state.members.reduce((acc, m) => acc + (m.prs || 0), 0);
     const totalCommits = state.members.reduce((acc, m) => acc + (m.commits || 0), 0);
 
+    const isRefreshing = loadingStates.fetchingRepos ||
+        loadingStates.fetchingMembers ||
+        loadingStates.fetchingAlerts ||
+        loadingStates.fetchingPRs ||
+        loadingStates.fetchingOrgData
+
     return (
         <DashboardLayout>
             {/* Header */}
@@ -59,7 +65,10 @@ export default function Page() {
                     fetchMembers(true);
                     fetchSecurityAlerts(true);
                 }}>
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className={`h-4 w-4
+                         ${isRefreshing
+                        && "animate-spin"}`}
+                    />
                     Run Scan
                 </Button>
             </div>
@@ -74,6 +83,7 @@ export default function Page() {
                     icon={GitBranch}
                     iconColor="primary"
                     href="/repos"
+                    loading={isRefreshing}
                 />
                 <StatCard
                     title="Team Members"
@@ -83,6 +93,7 @@ export default function Page() {
                     icon={Users}
                     iconColor="success"
                     href="/members"
+                    loading={isRefreshing}
                 />
                 <StatCard
                     title="Activity (PRs)"
@@ -91,6 +102,7 @@ export default function Page() {
                     changeType="positive"
                     icon={GitCommit}
                     iconColor="primary"
+                    loading={isRefreshing}
                 />
                 <StatCard
                     title="Open Alerts"
@@ -100,6 +112,7 @@ export default function Page() {
                     icon={AlertTriangle}
                     iconColor="destructive"
                     href="/security"
+                    loading={isRefreshing}
                 />
             </div>
 
@@ -112,8 +125,8 @@ export default function Page() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <SecurityAlertsCard />
-                <TopContributors />
+                <SecurityAlertsCard loading={isRefreshing} />
+                <TopContributors loading={isRefreshing} />
             </div>
 
             <RepoHealthCard />

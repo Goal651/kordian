@@ -1,8 +1,8 @@
-import { AlertTriangle, Bug, Key, Package } from "lucide-react";
+import { AlertTriangle, Bug, Key, Loader2, Package } from "lucide-react";
 
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
-export function SecurityAlertsCard() {
+export function SecurityAlertsCard({ loading }: { loading: boolean }) {
   const { state } = useGitHubApp();
 
   const totalCritical = state.alerts.filter(a => a.severity === "critical").length;
@@ -51,7 +51,7 @@ export function SecurityAlertsCard() {
       </div>
 
       <div className="space-y-4">
-        {alertsDisplay.map((alert) => (
+        { loading ? <Loader2 className="w-8 h-8 animate-spin" /> : alertsDisplay.map((alert) => (
           <div
             key={alert.type}
             className="flex items-center justify-between rounded-lg bg-secondary/50 p-4"

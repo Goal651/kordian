@@ -1,10 +1,12 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
-export function TopContributors() {
+export function TopContributors({ loading }: { loading: boolean }) {
   const { state } = useGitHubApp();
-  const members = state.members.slice(0, 5);
+  const members = state.members.slice(0, 5)
+
+
 
   return (
     <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
@@ -14,7 +16,9 @@ export function TopContributors() {
       </div>
 
       <div className="space-y-3">
-        {members.length === 0 ? (
+        {loading ? (
+          <Loader2 className="h-8 w-8 text-white animate-spin" />
+        ) : members.length === 0 ? (
           <p className="text-sm text-muted-foreground italic">No data available</p>
         ) : (
           members.map((contributor, index) => (

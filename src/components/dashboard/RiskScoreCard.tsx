@@ -1,15 +1,17 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Shield } from "lucide-react";
+import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
-const data = [
-  { name: "Score", value: 72 },
-  { name: "Remaining", value: 28 },
-];
+
 
 const COLORS = ["hsl(152, 76%, 45%)", "hsl(222, 30%, 16%)"];
 
 export function RiskScoreCard() {
-  const score =76;
+  const { state } = useGitHubApp()
+  const healthyRepo = state.repos.filter(repo => repo.status == 'healthy')
+  const totalRepo = state.repos.length
+
+  const score =Math.round(healthyRepo.length / totalRepo * 100 );
   const getScoreColor = () => {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
@@ -22,6 +24,10 @@ export function RiskScoreCard() {
     if (score >= 40) return "Fair";
     return "Critical";
   };
+  const data = [
+  { name: "Score", value: score },
+  { name: "Remaining", value: 100 - score },
+];
 
   return (
     <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.15s" }}>

@@ -13,6 +13,15 @@ const StatusIcon = ({ status }: { status: string }) => {
 export function RepoHealthCard() {
   const { state } = useGitHubApp();
 
+  state.repos.map(repo => {
+    const data = state.alerts.filter(alert => alert.repo == repo.name)[0]
+    if (data && (data.severity == 'critical' || data.severity == 'high')) {
+      repo.status = 'critical' 
+    }
+    return repo
+  })
+
+
   // Filter for repos that need attention (critical or warning)
   const unhealthyRepos = state.repos
     .filter(r => r.status !== "healthy")
