@@ -56,6 +56,12 @@ export interface InstallationInfo {
   installedBy: string;
 }
 
+export interface DateRange {
+  from: Date;
+  to: Date;
+  label: string;
+}
+
 export interface AppInstallationState {
   installed: boolean;
   installationId: number | null;
@@ -67,6 +73,7 @@ export interface AppInstallationState {
   installations: InstallationInfo[];
   currentUserToken: string | null;
   installationStatus: 'checking' | 'installed' | 'not_installed' | 'error';
+  dateRange: DateRange | null;
 }
 
 
@@ -96,6 +103,7 @@ const AppContext = createContext<{
   fetchMembers: (force?: boolean) => Promise<void>;
   fetchSecurityAlerts: (force?: boolean) => Promise<void>;
   updateRankingWeights: (weights: RankingWeights) => void;
+  updateDateRange: (range: DateRange) => void;
   disconnect: () => void;
   isLoading: boolean;
   loadingStates: {
@@ -122,7 +130,8 @@ const AppContext = createContext<{
     rankingWeights: { prs: 20, reviews: 15, commits: 2 },
     installations: [],
     currentUserToken: null,
-    installationStatus: 'checking'
+    installationStatus: 'checking',
+    dateRange: null,
   },
   isLoading: true,
   loadingStates: {
@@ -138,6 +147,7 @@ const AppContext = createContext<{
   fetchMembers: async () => { },
   fetchSecurityAlerts: async () => { },
   updateRankingWeights: () => { },
+  updateDateRange: () => { },
   disconnect: () => { },
   checkExistingInstallations: async () => { },
   getUserInstallations: async () => [],
@@ -166,6 +176,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     repos: [],
     members: [],
     alerts: [],
+    dateRange: {
+      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // First day of current month
+      to: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), // Last day of current month
+      label: "This month"
+    }
   });
 
   // Loading states for different operations
@@ -500,6 +515,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [state.rankingWeights]);
 
   const disconnect = useCallback(() => {
+    const now = new Date();
     setState({
       installed: false,
       installationId: null,
@@ -510,7 +526,12 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       rankingWeights: { prs: 20, reviews: 15, commits: 2 },
       installations: [],
       currentUserToken: null,
-      installationStatus: 'not_installed'
+      installationStatus: 'not_installed',
+      dateRange: {
+        from: new Date(now.getFullYear(), now.getMonth(), 1),
+        to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+        label: "This month"
+      }
     });
 
     localStorage.removeItem(STORAGE_KEYS.INSTALLATION);
@@ -745,18 +766,25 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       });
       const { token } = await tokenRes.json();
 
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Use date range from state
+      const fromDate = state.dateRange?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const toDate = state.dateRange?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+      console.log('🔍 Fetching members with date range:', {
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
+        label: state.dateRange?.label
+      });
 
       const query = `
-        query($org: String!, $from: DateTime!) {
+        query($org: String!, $from: DateTime!, $to: DateTime!) {
           organization(login: $org) {
             membersWithRole(first: 50) {
               nodes {
                 login
                 name
                 avatarUrl
-                contributionsCollection(from: $from) {
+                contributionsCollection(from: $from, to: $to) {
                   totalCommitContributions
                   totalPullRequestContributions
                   totalPullRequestReviewContributions
@@ -777,12 +805,15 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           query,
           variables: {
             org: state.selectedOrg,
-            from: thirtyDaysAgo.toISOString(),
+            from: fromDate.toISOString(),
+            to: toDate.toISOString(),
           },
         }),
       });
 
       const json = await res.json();
+      console.log('📊 GitHub API Response:', json);
+      
       const nodes = json.data?.organization?.membersWithRole?.nodes || [];
 
       const members = nodes.map((node: any) => {
@@ -804,6 +835,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         };
       }).sort((a: any, b: any) => b.score - a.score);
 
+      console.log('✅ Processed members:', members.slice(0, 3));
+
       setState(prev => ({ ...prev, members }));
       saveToCache({ members });
     } catch (err) {
@@ -812,7 +845,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       // Reset loading state
       setLoadingStates(prev => ({ ...prev, fetchingMembers: false }));
     }
-  }, [state.selectedOrg, state.installationId, state.rankingWeights]);
+  }, [state.selectedOrg, state.installationId, state.rankingWeights, state.dateRange]);
 
   const fetchSecurityAlerts = useCallback(async (force = false) => {
     if (!state.selectedOrg || !state.installationId) return;
@@ -948,6 +981,11 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateDateRange = useCallback((range: DateRange) => {
+    setState(prev => ({ ...prev, dateRange: range }));
+    // Note: Data will be refetched when components detect the date range change
+  }, []);
+
   return (
     <AppContext.Provider value={{
       state,
@@ -957,6 +995,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       fetchMembers,
       fetchSecurityAlerts,
       updateRankingWeights,
+      updateDateRange,
       disconnect,
       isLoading,
       loadingStates,
