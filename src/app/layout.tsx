@@ -19,14 +19,21 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={cn(inter.className, "overflow-hidden")}>
+                {/* Main dot pattern */}
                 <div
-                    className="fixed inset-0 z-0"
+                    className="fixed inset-0 z-0 pointer-events-none"
                     style={{
-                        backgroundImage: `radial-gradient(circle, rgba(255, 255, 255, 0.6) 1px, transparent 2px)`,
-                        backgroundSize: '40px 40px',
-                        opacity: 0.1,
+                        backgroundImage: `
+            radial-gradient(circle at 1px 1px, white 1px, transparent 0),
+            radial-gradient(circle at 13px 13px, rgba(255,255,255,0.15) 1px, transparent 0)
+        `,
+                        backgroundSize: '28px 28px, 56px 56px',
+                        opacity: 0.2,
                     }}
                 />
+
+                {/* Very subtle radial fade at edges */}
+                <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-t from-background via-transparent to-background opacity-40" />
                 <Providers>{children}</Providers>
             </body>
         </html>
