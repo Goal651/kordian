@@ -32,7 +32,7 @@ export function StatCard({
   loading,
 }: StatCardProps) {
   const content = (
-    <div className={cn("stat-card animate-fade-in transition-all", href && "hover:shadow-md hover:scale-[1.02] cursor-pointer")}>
+    <div className={cn("stat-card cursor-pointer animate-fade-in transition-all", href && "hover:shadow-md hover:scale-[1.02] cursor-pointer")}>
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>

@@ -12,7 +12,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-black/50 relative overflow-hidden">
+     
       {/* Desktop Sidebar */}
       <Sidebar className="hidden md:flex" />
 
@@ -36,7 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sheet>
       </div>
 
-      <main className="md:ml-64 min-h-screen pt-16 md:pt-0 transition-all duration-300">
+      <main className="md:ml-64 h-full overflow-auto pt-16 md:pt-0 transition-all duration-300">
         <div className="hero-glow fixed inset-0 pointer-events-none" />
         <div className="relative p-4 md:p-8">
           {children}

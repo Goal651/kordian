@@ -30,7 +30,6 @@ export async function POST(req: Request) {
             exp: now + (10 * 60), // Expires in 10 minutes
             iss: appId,
         };
-
         const gitHubJwt = jwt.sign(payload, privateKey, { algorithm: "RS256" });
 
         // 2. Exchange JWT for an Installation Access Token

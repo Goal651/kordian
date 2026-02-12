@@ -75,10 +75,10 @@
 
 @layer components {
     .glass-card {
-        @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
+        @apply bg-black border border-border/50 rounded-xl;
         background: linear-gradient(135deg,
-                hsl(var(--card) / 0.9) 0%,
-                hsl(var(--card) / 0.7) 100%);
+                hsl(var(--card) / 0.4) 0%,
+                hsl(var(--card) / 0.2) 100%);
     }
 
     .glow-border {

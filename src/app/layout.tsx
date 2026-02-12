@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className}>
+            <body className={cn(inter.className, "overflow-hidden")}>
+                <div
+                    className="fixed inset-0 z-0"
+                    style={{
+                        backgroundImage: `radial-gradient(circle, rgba(255, 255, 255, 0.6) 1px, transparent 2px)`,
+                        backgroundSize: '40px 40px',
+                        opacity: 0.1,
+                    }}
+                />
                 <Providers>{children}</Providers>
             </body>
         </html>

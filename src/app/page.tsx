@@ -60,7 +60,8 @@ export default function Page() {
                         <span className="font-mono text-primary">{state.selectedOrg || "Loading..."}</span> · Last scanned just now
                     </p>
                 </div>
-                <Button variant="glow" className="gap-2" onClick={() => {
+                <Button
+                 variant="glow" className="gap-2 bg-black shadow text-white hover:bg-black/90" onClick={() => {
                     fetchOrgData(true);
                     fetchMembers(true);
                     fetchSecurityAlerts(true);
