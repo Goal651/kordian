@@ -111,7 +111,7 @@ export default function Page() {
     // Show loading while checking installations or connecting
     if (isLoading || loadingStates.fetchingOrgData) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <div className="hero-glow fixed inset-0 pointer-events-none" />
                 <div className="relative text-center glass-card p-8 max-w-md">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
@@ -136,7 +136,7 @@ export default function Page() {
     // If we have installations but none selected, show the organization selector
     if (state.installationStatus === 'installed' && state.installations.length > 0 && !state.selectedOrg) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="min-h-screen bg-black flex items-center justify-center p-4">
                 <div className="hero-glow fixed inset-0 pointer-events-none" />
                 <OrganizationSelector />
             </div>
@@ -145,16 +145,16 @@ export default function Page() {
 
     // If no installations found, show the main connect page
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-black/40 flex items-center justify-center p-4">
             <div className="hero-glow fixed inset-0 pointer-events-none" />
             
             <div className="relative w-full max-w-2xl">
                 {/* Logo and heading */}
                 <div className="text-center mb-8 animate-fade-in">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 mb-6 animate-glow">
+                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-black border border-black mb-6 animate-glow">
                         <Github className="h-8 w-8 text-primary" />
                     </div>
-                    <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
+                    <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
                         Stop managing your GitHub <br /> organization in the dark.
                     </h1>
                     <p className="text-lg text-muted-foreground max-w-lg mx-auto">
@@ -163,7 +163,7 @@ export default function Page() {
                 </div>
 
                 {/* Main card */}
-                <div className="glass-card p-8 animate-fade-in shadow-2xl border-primary/10" style={{ animationDelay: "0.1s" }}>
+                <div className="animate-fade-in k" style={{ animationDelay: "0.1s" }}>
                     
                     {/* Error Display */}
                     {authError && (
@@ -203,7 +203,7 @@ export default function Page() {
                     )}
 
                     {/* Features Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div className="grid  grid-cols-1 md:grid-cols-2 gap-10 mb-8">
                         <div className="p-4 rounded-lg bg-secondary/20 border border-border/50">
                             <div className="flex items-center gap-2 mb-2">
                                 <Shield className="h-5 w-5 text-primary" />
@@ -240,7 +240,7 @@ export default function Page() {
                             onClick={handleConnect} 
                             variant="glow" 
                             size="lg" 
-                            className="w-full md:w-auto min-w-[300px] h-12 text-base group mb-6"
+                            className="w-full md:w-auto min-w-[250px] h-12 text-gray-300  bg-black/20 hover:bg-black/80 group mb-6 shadow "
                             disabled={isConnecting || isLoading || loadingStates.fetchingOrgData}
                         >
                             {isConnecting ? (

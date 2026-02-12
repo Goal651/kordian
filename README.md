@@ -52,7 +52,7 @@ No database. No stored tokens. GitGuard runs entirely in your browser session (c
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/your-username/git-guard.git
+   git clone https://github.com/goal651/git-guard.git
    cd git-guard
    ```
 
