@@ -604,6 +604,14 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
                     color
                   }
                 }
+                vulnerabilityAlerts(first: 100, states: OPEN) {
+                  totalCount
+                  nodes {
+                    securityAdvisory {
+                      severity
+                    }
+                  }
+                }
                 defaultBranchRef {
                   target {
                     ... on Commit {
@@ -657,6 +665,40 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
         const languageNode = r.languages?.nodes?.[0];
 
+        // Get real alert data
+        const alertCount = r.vulnerabilityAlerts?.totalCount || 0;
+        const alertNodes = r.vulnerabilityAlerts?.nodes || [];
+        
+        // Check severity of alerts
+        const hasCritical = alertNodes.some((a: any) => 
+          a.securityAdvisory?.severity === "CRITICAL"
+        );
+        const hasHigh = alertNodes.some((a: any) => 
+          a.securityAdvisory?.severity === "HIGH"
+        );
+
+        // Calculate status based on last commit date
+        const lastPushDate = new Date(r.pushedAt);
+        const daysSinceLastPush = Math.floor((Date.now() - lastPushDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let status: "healthy" | "warning" | "critical" = "healthy";
+        
+        // Security alerts take priority
+        if (alertCount > 0) {
+          if (hasCritical || hasHigh) {
+            status = "critical";
+          } else {
+            status = "warning";
+          }
+        } else {
+          // Fall back to activity-based status
+          if (daysSinceLastPush > 180) {
+            status = "critical"; // No activity for 6+ months
+          } else if (daysSinceLastPush > 90) {
+            status = "warning"; // No activity for 3+ months
+          }
+        }
+
         return {
           name: r.name,
           description: r.description || "",
@@ -666,8 +708,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
           stars: r.stargazerCount,
           forks: r.forkCount,
           lastCommit: new Date(r.pushedAt).toLocaleString(),
-          alerts: 0,
-          status: "critical",
+          alerts: alertCount,
+          status,
           contributors
         };
       });

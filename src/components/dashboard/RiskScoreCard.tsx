@@ -11,7 +11,7 @@ export function RiskScoreCard() {
   const healthyRepo = state.repos.filter(repo => repo.status == 'healthy')
   const totalRepo = state.repos.length
 
-  const score =Math.round(healthyRepo.length / totalRepo * 100 );
+  const score = Math.round(healthyRepo.length / totalRepo * 100);
   const getScoreColor = () => {
     if (score >= 80) return "text-success";
     if (score >= 60) return "text-warning";
@@ -25,9 +25,9 @@ export function RiskScoreCard() {
     return "Critical";
   };
   const data = [
-  { name: "Score", value: score },
-  { name: "Remaining", value: 100 - score },
-];
+    { name: "Score", value: score },
+    { name: "Remaining", value: 100 - score },
+  ];
 
   return (
     <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.15s" }}>
@@ -72,11 +72,11 @@ export function RiskScoreCard() {
       <div className="mt-4 pt-4 border-t border-border space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Vulnerabilities Fixed</span>
-          <span className="font-mono text-success">85%</span>
+          <span className="font-mono text-success">{score}%</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Policies Enforced</span>
-          <span className="font-mono text-foreground">12/15</span>
+          <span className="font-mono text-foreground">{12}/{15}</span>
         </div>
       </div>
     </div>
