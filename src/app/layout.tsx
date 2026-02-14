@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
                 {/* Very subtle radial fade at edges */}
                 <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-t from-background via-transparent to-background opacity-40" />
                 <Providers>{children}</Providers>
+                <Analytics />
             </body>
         </html>
     );
