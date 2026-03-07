@@ -93,38 +93,78 @@ export function useGitHubDataFetch(
       const currentOrg = org || currentState.selectedOrg;
       const finalAccountType = responseAccountType || currentState.accountType;
       
-      console.log(`[DEBUG] fetchOrgData starting for ${currentOrg} (${finalAccountType}) from ${fromDate?.toISOString()} to ${toDate?.toISOString()}`);
+      console.log(`[Nexus] fetchOrgData starting for ${currentOrg} (${finalAccountType}) from ${fromDate?.toISOString()} to ${toDate?.toISOString()}`);
 
       const query = `
-        query($owner: String!, $since: DateTime, $until: DateTime) {
+        query($owner: String!, $since: GitTimestamp, $until: GitTimestamp) {
           repositoryOwner(login: $owner) {
-            ... on Organization { createdAt }
-            ... on User { createdAt }
-            repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
-              nodes {
-                name
-                description
-                isPrivate
-                stargazerCount
-                forkCount
-                pushedAt
-                url
-                languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
-                  nodes {
-                    name
-                    color
+            ... on Organization { 
+              createdAt 
+              repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
+                totalCount
+                nodes {
+                  name
+                  description
+                  isPrivate
+                  stargazerCount
+                  forkCount
+                  pushedAt
+                  url
+                  languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+                    nodes {
+                      name
+                      color
+                    }
+                  }
+                  defaultBranchRef {
+                    target {
+                      ... on Commit {
+                        history(first: 50, since: $since, until: $until) {
+                          nodes {
+                            author {
+                              user {
+                                login
+                                name
+                                avatarUrl
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   }
                 }
-                defaultBranchRef {
-                  target {
-                    ... on Commit {
-                      history(first: 50, since: $since, until: $until) {
-                        nodes {
-                          author {
-                            user {
-                              login
-                              name
-                              avatarUrl
+              }
+            }
+            ... on User { 
+              createdAt 
+              repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
+                totalCount
+                nodes {
+                  name
+                  description
+                  isPrivate
+                  stargazerCount
+                  forkCount
+                  pushedAt
+                  url
+                  languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+                    nodes {
+                      name
+                      color
+                    }
+                  }
+                  defaultBranchRef {
+                    target {
+                      ... on Commit {
+                        history(first: 50, since: $since, until: $until) {
+                          nodes {
+                            author {
+                              user {
+                                login
+                                name
+                                avatarUrl
+                              }
                             }
                           }
                         }
@@ -155,10 +195,11 @@ export function useGitHubDataFetch(
       });
 
       const json = await res.json();
-      console.log(`[DEBUG] fetchOrgData response for ${currentOrg}:`, { 
+      console.log(`[Nexus] fetchOrgData response for ${currentOrg}:`, { 
         hasData: !!json.data, 
         hasOwner: !!json.data?.repositoryOwner,
         repoCount: json.data?.repositoryOwner?.repositories?.nodes?.length || 0,
+        totalRepos: json.data?.repositoryOwner?.repositories?.totalCount || 0,
         errors: json.errors 
       });
       
@@ -167,6 +208,7 @@ export function useGitHubDataFetch(
       }
 
       const nodes = (json.data?.repositoryOwner?.repositories?.nodes || []).filter((node: any) => node !== null);
+      const totalRepos = json.data?.repositoryOwner?.repositories?.totalCount || nodes.length;
 
       const repos = nodes.map((r: any) => {
         const commits = r.defaultBranchRef?.target?.history?.nodes || [];
@@ -219,6 +261,7 @@ export function useGitHubDataFetch(
         return {
           ...prev,
           repos: mergedRepos,
+          totalRepos: totalRepos || prev.totalRepos,
           selectedOrg: currentOrg,
           orgCreatedAt: json.data?.repositoryOwner?.createdAt || prev.orgCreatedAt
         };
@@ -226,6 +269,7 @@ export function useGitHubDataFetch(
 
       saveToCache({
         repos, // We save base repos to cache, alerts will be updated by alerts fetcher
+        totalRepos: totalRepos,
         orgCreatedAt: json.data?.repositoryOwner?.createdAt
       });
     } catch (err: any) {
@@ -271,11 +315,14 @@ export function useGitHubDataFetch(
       const fromDate = currentState.dateRange?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       const toDate = currentState.dateRange?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
+      console.log(`[Nexus] fetchMembers starting for ${currentState.selectedOrg} from ${fromDate.toISOString()} to ${toDate.toISOString()}`);
+
       const query = `
         query($owner: String!, $from: DateTime!, $to: DateTime!) {
           repositoryOwner(login: $owner) {
             ... on Organization {
               membersWithRole(first: 50) {
+                totalCount
                 nodes {
                   login
                   name
@@ -369,14 +416,23 @@ export function useGitHubDataFetch(
       const json = await res.json();
       const owner = json.data?.repositoryOwner;
       let nodes: any[] = [];
+      let totalMembers = 0;
       
       if (owner?.membersWithRole) {
         // It's an Organization
         nodes = owner.membersWithRole.nodes;
+        totalMembers = owner.membersWithRole.totalCount;
       } else if (owner) {
         // It's a User
         nodes = [owner];
+        totalMembers = 1;
       }
+
+      console.log(`[Nexus] fetchMembers response for ${currentState.selectedOrg}:`, {
+        nodeCount: nodes.length,
+        totalMembers,
+        errors: json.errors
+      });
 
       const members = nodes.map((node: any) => {
         const stats = node.contributionsCollection;
@@ -411,8 +467,15 @@ export function useGitHubDataFetch(
       }).sort((a: any, b: any) => b.score - a.score);
  
       const typedMembers: Member[] = members;
-      setState(prev => ({ ...prev, members: typedMembers }));
-      saveToCache({ members: typedMembers });
+      setState(prev => ({ 
+        ...prev, 
+        members: typedMembers,
+        totalMembers: totalMembers || prev.totalMembers
+      }));
+      saveToCache({ 
+        members: typedMembers,
+        totalMembers: totalMembers
+      });
     } catch (err) {
       console.error("Failed to fetch members via GraphQL", err);
     } finally {

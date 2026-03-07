@@ -56,7 +56,9 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     selectedMemberId: null,
     selectedRepoName: null,
     theme: 'dark',
-    accountType: null
+    accountType: null,
+    totalRepos: 0,
+    totalMembers: 0
   });
 
   const [loadingStates, setLoadingStates] = useState({

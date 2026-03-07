@@ -85,4 +85,6 @@ export interface AppInstallationState {
   selectedRepoName: string | null;
   theme: 'light' | 'dark';
   accountType: 'User' | 'Organization' | null;
+  totalRepos: number;
+  totalMembers: number;
 }

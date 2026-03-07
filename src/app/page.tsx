@@ -70,7 +70,7 @@ export default function Page() {
             <div className="mb-8 flex items-center justify-between w-full">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                        Organization Overview
+                        Organization Insights
                     </h1>
                     <div className="flex items-center gap-2 mt-1">
                         <p className="text-muted-foreground">
@@ -112,8 +112,8 @@ export default function Page() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 w-full">
                 <StatCard
                     title="Total Repositories"
-                    value={state.repos?.length?.toString() || "0"}
-                    change={state.repos?.length ? "Live data" : "-"}
+                    value={state.totalRepos > 0 ? state.totalRepos.toString() : state.repos?.length?.toString() || "0"}
+                    change={state.repos?.length ? "Organization total" : "-"}
                     changeType="positive"
                     icon={GitBranch}
                     iconColor="primary"
@@ -122,8 +122,8 @@ export default function Page() {
                 />
                 <StatCard
                     title="Team Members"
-                    value={state.members?.length?.toString() || "0"}
-                    change={state.members?.length ? "Live data" : "-"}
+                    value={state.totalMembers > 0 ? state.totalMembers.toString() : state.members?.length?.toString() || "0"}
+                    change={state.members?.length ? "Organization total" : "-"}
                     changeType="neutral"
                     icon={Users}
                     iconColor="success"

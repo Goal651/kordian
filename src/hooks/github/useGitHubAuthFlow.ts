@@ -211,7 +211,9 @@ export function useGitHubAuthFlow(
       selectedMemberId: null,
       selectedRepoName: null,
       theme: 'dark',
-      accountType: null
+      accountType: null,
+      totalRepos: 0,
+      totalMembers: 0
     });
 
     localStorage.removeItem(STORAGE_KEYS.INSTALLATION);

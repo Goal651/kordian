@@ -43,6 +43,8 @@ export function getInstallationState(): AppInstallationState {
       selectedRepoName: null,
       theme: 'dark',
       accountType: null,
+      totalRepos: 0,
+      totalMembers: 0,
     };
   }
 
@@ -66,6 +68,8 @@ export function getInstallationState(): AppInstallationState {
       selectedRepoName: null,
       theme: 'dark',
       accountType: null,
+      totalRepos: 0,
+      totalMembers: 0,
     };
   }
 }

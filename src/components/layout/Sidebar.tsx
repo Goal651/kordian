@@ -41,8 +41,8 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           <img src="/icon.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
         </div>
         <div>
-          <h1 className="text-sm font-semibold text-foreground">GitGuard</h1>
-          <p className="text-xs text-muted-foreground">Security Dashboard</p>
+          <h1 className="text-sm font-semibold text-foreground">Nexus</h1>
+          <p className="text-xs text-muted-foreground">Security & Activity Hub</p>
         </div>
       </div>
 
