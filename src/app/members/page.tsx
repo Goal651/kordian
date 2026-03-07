@@ -13,12 +13,13 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
-import { useGitHubApp, Member } from "@/hooks/useGitHubAuth";
+import { useGitHubApp} from "@/hooks/useGitHubAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { Member } from "@/types";
 
 // Custom tooltip with better styling
 const CustomTooltip = ({ active, payload, label }: any) => {
