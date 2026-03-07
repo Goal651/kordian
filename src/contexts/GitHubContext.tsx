@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from "react";
 import { AppInstallationState, InstallationInfo, RankingWeights, DateRange } from "@/types";
 import { STORAGE_KEYS, CACHE_DURATION, CACHE_KEY } from "@/hooks/github/constants";
 import { useGitHubDataFetch } from "@/hooks/github/useGitHubDataFetch";
@@ -74,26 +74,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   );
 
   const authFlow = useGitHubAuthFlow(state, setState, setIsLoading, selectOrg);
-
-  useEffect(() => {
-    const initializeAuth = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-
-      if (code) {
-        await authFlow.handleInstallationCallback(code);
-        window.history.replaceState({}, '', window.location.pathname);
-        return;
-      }
-
-      await hydrateFromStorage();
-      setIsLoading(false);
-    };
-
-    if (typeof window !== 'undefined') {
-      initializeAuth();
-    }
-  }, [authFlow.handleInstallationCallback]);
+  const initialized = useRef(false);
 
   const hydrateFromStorage = useCallback(async () => {
     try {
@@ -138,6 +119,29 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       console.error("Failed to hydrate from storage:", error);
     }
   }, []);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (initialized.current) return;
+      initialized.current = true;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+
+      if (code) {
+        await authFlow.handleInstallationCallback(code);
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
+      }
+
+      await hydrateFromStorage();
+      setIsLoading(false);
+    };
+
+    if (typeof window !== 'undefined') {
+      initializeAuth();
+    }
+  }, [authFlow.handleInstallationCallback, hydrateFromStorage]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('gitguard_theme') as 'light' | 'dark';

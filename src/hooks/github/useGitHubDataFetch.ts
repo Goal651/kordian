@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { AppInstallationState, SecurityAlert, Member } from "@/types";
 import { STORAGE_KEYS, CACHE_KEY, CACHE_DURATION } from "./constants";
 
@@ -20,13 +20,25 @@ export function useGitHubDataFetch(
     fetchingPRs: boolean;
   }
 ) {
+  // Use refs to stabilize callbacks
+  const stateRef = useRef(state);
+  const loadingStatesRef = useRef(loadingStates);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    loadingStatesRef.current = loadingStates;
+  }, [loadingStates]);
+
   const saveToCache = useCallback((data: Partial<AppInstallationState>) => {
     const existing = localStorage.getItem(STORAGE_KEYS.CACHE);
-    let cacheObj = existing ? JSON.parse(existing) : { timestamp: Date.now(), org: state.selectedOrg };
+    let cacheObj = existing ? JSON.parse(existing) : { timestamp: Date.now(), org: stateRef.current.selectedOrg };
 
     // Reset timestamp on new data or if org changed
-    if (cacheObj.org !== state.selectedOrg) {
-      cacheObj = { timestamp: Date.now(), org: state.selectedOrg };
+    if (cacheObj.org !== stateRef.current.selectedOrg) {
+      cacheObj = { timestamp: Date.now(), org: stateRef.current.selectedOrg };
     }
 
     const newCache = {
@@ -35,16 +47,17 @@ export function useGitHubDataFetch(
       timestamp: Date.now()
     };
     localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify(newCache));
-  }, [state.selectedOrg]);
+  }, []);
 
   const fetchOrgData = useCallback(async (force = false) => {
-    if (!state.selectedOrg || !state.installationId || loadingStates.fetchingRepos) return;
+    const currentState = stateRef.current;
+    if (!currentState.selectedOrg || !currentState.installationId || loadingStatesRef.current.fetchingRepos) return;
 
     if (!force) {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { repos, timestamp, org } = JSON.parse(cached);
-        if (org === state.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
           return;
         }
       }
@@ -56,16 +69,15 @@ export function useGitHubDataFetch(
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ installationId: state.installationId }),
+        body: JSON.stringify({ installationId: currentState.installationId }),
       });
       const { token, org } = await tokenRes.json();
 
-      if (org && org !== state.selectedOrg) {
+      if (org && org !== currentState.selectedOrg) {
         setState(prev => ({ ...prev, selectedOrg: org }));
       }
 
-      const currentOrg = org || state.selectedOrg;
-      const isOrg = (org && state.accountType === 'Organization') || (!org && state.accountType === 'Organization') || state.accountType === null;
+      const currentOrg = org || currentState.selectedOrg;
 
       const query = `
         query($owner: String!) {
@@ -190,16 +202,17 @@ export function useGitHubDataFetch(
     } finally {
       setLoadingStates(prev => ({ ...prev, fetchingRepos: false }));
     }
-  }, [state.selectedOrg, state.installationId, setState, setLoadingStates, saveToCache, loadingStates.fetchingRepos]);
+  }, [setState, setLoadingStates, saveToCache]);
 
   const fetchMembers = useCallback(async (force = false) => {
-    if (!state.selectedOrg || !state.installationId || loadingStates.fetchingMembers) return;
+    const currentState = stateRef.current;
+    if (!currentState.selectedOrg || !currentState.installationId || loadingStatesRef.current.fetchingMembers) return;
 
     if (!force) {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { members, timestamp, org } = JSON.parse(cached);
-        if (org === state.selectedOrg && members && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && members && Date.now() - timestamp < CACHE_DURATION) {
           return;
         }
       }
@@ -211,12 +224,12 @@ export function useGitHubDataFetch(
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ installationId: state.installationId }),
+        body: JSON.stringify({ installationId: currentState.installationId }),
       });
       const { token } = await tokenRes.json();
 
-      const fromDate = state.dateRange?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const toDate = state.dateRange?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      const fromDate = currentState.dateRange?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const toDate = currentState.dateRange?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
       const query = `
         query($owner: String!, $from: DateTime!, $to: DateTime!) {
@@ -306,7 +319,7 @@ export function useGitHubDataFetch(
         body: JSON.stringify({
           query,
           variables: {
-            owner: state.selectedOrg,
+            owner: currentState.selectedOrg,
             from: fromDate.toISOString(),
             to: toDate.toISOString(),
           },
@@ -331,7 +344,7 @@ export function useGitHubDataFetch(
         // Helper to filter and sum contributions for the selected org/user
         const filterAndSum = (repos: any[]) => {
           return repos
-            ?.filter((r: any) => r.repository.owner.login.toLowerCase() === state.selectedOrg?.toLowerCase())
+            ?.filter((r: any) => r.repository.owner.login.toLowerCase() === currentState.selectedOrg?.toLowerCase())
             .reduce((sum: number, r: any) => sum + r.contributions.totalCount, 0) || 0;
         };
 
@@ -340,7 +353,7 @@ export function useGitHubDataFetch(
         const reviews = filterAndSum(stats.pullRequestReviewContributionsByRepository);
         
         const contributedRepos = stats.commitContributionsByRepository
-          ?.filter((r: any) => r.repository.owner.login.toLowerCase() === state.selectedOrg?.toLowerCase())
+          ?.filter((r: any) => r.repository.owner.login.toLowerCase() === currentState.selectedOrg?.toLowerCase())
           .map((repoContr: any) => repoContr.repository.name) || [];
 
         return {
@@ -353,7 +366,7 @@ export function useGitHubDataFetch(
           prs,
           reviews,
           contributedRepos,
-          score: (prs * state.rankingWeights.prs) + (reviews * state.rankingWeights.reviews) + (commits * state.rankingWeights.commits)
+          score: (prs * currentState.rankingWeights.prs) + (reviews * currentState.rankingWeights.reviews) + (commits * currentState.rankingWeights.commits)
         };
       }).sort((a: any, b: any) => b.score - a.score);
  
@@ -365,16 +378,17 @@ export function useGitHubDataFetch(
     } finally {
       setLoadingStates(prev => ({ ...prev, fetchingMembers: false }));
     }
-  }, [state.selectedOrg, state.installationId, state.rankingWeights, state.dateRange, setState, setLoadingStates, saveToCache, loadingStates.fetchingMembers]);
+  }, [setState, setLoadingStates, saveToCache]);
 
   const fetchSecurityAlerts = useCallback(async (force = false) => {
-    if (!state.selectedOrg || !state.installationId || loadingStates.fetchingAlerts) return;
+    const currentState = stateRef.current;
+    if (!currentState.selectedOrg || !currentState.installationId || loadingStatesRef.current.fetchingAlerts) return;
 
     if (!force) {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { alerts, timestamp, org } = JSON.parse(cached);
-        if (org === state.selectedOrg && alerts && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && alerts && Date.now() - timestamp < CACHE_DURATION) {
           return;
         }
       }
@@ -386,12 +400,12 @@ export function useGitHubDataFetch(
       const tokenRes = await fetch("/api/github/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ installationId: state.installationId }),
+        body: JSON.stringify({ installationId: currentState.installationId }),
       });
       const { token } = await tokenRes.json();
 
-      const isOrg = state.accountType === 'Organization';
-      const baseApiUrl = isOrg ? `https://api.github.com/orgs/${state.selectedOrg}` : `https://api.github.com/user`;
+      const isOrg = currentState.accountType === 'Organization';
+      const baseApiUrl = isOrg ? `https://api.github.com/orgs/${currentState.selectedOrg}` : `https://api.github.com/user`;
 
       // 1. Fetch Dependabot alerts
       const depRes = await fetch(`${baseApiUrl}/dependabot/alerts?state=open`, {
@@ -478,7 +492,7 @@ export function useGitHubDataFetch(
     } finally {
       setLoadingStates(prev => ({ ...prev, fetchingAlerts: false }));
     }
-  }, [state.selectedOrg, state.installationId, setState, setLoadingStates, saveToCache, loadingStates.fetchingAlerts]);
+  }, [setState, setLoadingStates, saveToCache]);
 
   return {
     fetchOrgData,

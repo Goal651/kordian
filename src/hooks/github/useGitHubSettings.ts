@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { AppInstallationState, RankingWeights, DateRange } from "@/types";
 import { STORAGE_KEYS } from "./constants";
 
@@ -9,8 +9,14 @@ export function useGitHubSettings(
   fetchMembers: (force?: boolean) => Promise<void>,
   fetchSecurityAlerts: (force?: boolean) => Promise<void>
 ) {
+  // Use a ref for ranking weights to stabilize selectOrg
+  const weightsRef = useRef(state.rankingWeights);
+  useEffect(() => {
+    weightsRef.current = state.rankingWeights;
+  }, [state.rankingWeights]);
+
   const selectOrg = useCallback((org: string, installationId: number, accountType?: 'User' | 'Organization') => {
-    const finalAccountType = accountType || 'Organization'; // Default to Org if unknown
+    const finalAccountType = accountType || 'Organization';
     
     setState(prev => ({
       ...prev,
@@ -27,7 +33,7 @@ export function useGitHubSettings(
         installed: true,
         selectedOrg: org,
         installationId,
-        rankingWeights: state.rankingWeights,
+        rankingWeights: weightsRef.current,
         accountType: finalAccountType
       })
     );
@@ -37,7 +43,7 @@ export function useGitHubSettings(
     fetchOrgData(true);
     fetchMembers(true);
     fetchSecurityAlerts(true);
-  }, [state.rankingWeights, setState, fetchOrgData, fetchMembers, fetchSecurityAlerts]);
+  }, [setState, fetchOrgData, fetchMembers, fetchSecurityAlerts]);
 
   const updateRankingWeights = useCallback((weights: RankingWeights) => {
     setState(prev => {

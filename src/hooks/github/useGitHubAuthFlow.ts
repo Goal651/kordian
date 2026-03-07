@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { AppInstallationState, InstallationInfo } from "@/types";
 import { STORAGE_KEYS, GITHUB_CONFIG } from "./constants";
 
@@ -8,17 +8,28 @@ export function useGitHubAuthFlow(
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
   selectOrg: (org: string, installationId: number, accountType?: 'User' | 'Organization') => void
 ) {
+  // Use a ref for state to stabilize callbacks
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const selectOrgRef = useRef(selectOrg);
+  useEffect(() => {
+    selectOrgRef.current = selectOrg;
+  }, [selectOrg]);
+
   const installToOrganization = useCallback(() => {
     window.location.href = `https://github.com/apps/${GITHUB_CONFIG.APP_NAME}/installations/new`;
   }, []);
 
   const getUserInstallations = useCallback(async (): Promise<InstallationInfo[]> => {
-    if (!state.currentUserToken) return [];
+    if (!stateRef.current.currentUserToken) return [];
 
     try {
       const response = await fetch("/api/github/installations", {
         headers: {
-          Authorization: `Bearer ${state.currentUserToken}`,
+          Authorization: `Bearer ${stateRef.current.currentUserToken}`,
         },
       });
 
@@ -42,22 +53,21 @@ export function useGitHubAuthFlow(
           installations: [],
           installationStatus: 'not_installed'
         }));
-        // Note: installApp should be called here, but we'll handle it via returning empty and caller logic
       }
     } catch (error) {
       console.error("Error getting user installations:", error);
     }
 
     return [];
-  }, [state.currentUserToken, setState]);
+  }, [setState]);
 
   const installApp = useCallback(async () => {
-    if (state.currentUserToken) {
+    if (stateRef.current.currentUserToken) {
       try {
         const installations = await getUserInstallations();
         if (installations.length > 0) {
           const firstInstallation = installations[0];
-          selectOrg(firstInstallation.organizationLogin, firstInstallation.installationId, firstInstallation.accountType);
+          selectOrgRef.current(firstInstallation.organizationLogin, firstInstallation.installationId, firstInstallation.accountType);
           return;
         }
         installToOrganization();
@@ -74,10 +84,10 @@ export function useGitHubAuthFlow(
     authUrl.searchParams.append("state", "install");
 
     window.location.href = authUrl.toString();
-  }, [state.currentUserToken, getUserInstallations, selectOrg, installToOrganization]);
+  }, [getUserInstallations, installToOrganization]);
 
   const checkExistingInstallations = useCallback(async () => {
-    if (!state.currentUserToken || state.installationStatus === 'checking') {
+    if (!stateRef.current.currentUserToken || stateRef.current.installationStatus === 'checking') {
       return;
     }
 
@@ -86,7 +96,7 @@ export function useGitHubAuthFlow(
     try {
       const response = await fetch("/api/github/installations", {
         headers: {
-          Authorization: `Bearer ${state.currentUserToken}`,
+          Authorization: `Bearer ${stateRef.current.currentUserToken}`,
         },
       });
 
@@ -131,7 +141,7 @@ export function useGitHubAuthFlow(
       console.error("Error checking installations:", error);
       setState(prev => ({ ...prev, installationStatus: 'error' }));
     }
-  }, [state.currentUserToken, setState, installApp]);
+  }, [setState, installApp]);
 
   const handleInstallationCallback = useCallback(async (code: string) => {
     try {
