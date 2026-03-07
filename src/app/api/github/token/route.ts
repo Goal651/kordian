@@ -69,14 +69,17 @@ export async function POST(req: Request) {
         );
 
         let orgName = null;
+        let accountType = null;
         if (installationRes.ok) {
             const installData = await installationRes.json();
             orgName = installData.account?.login;
+            accountType = installData.account?.type; // 'User' or 'Organization'
         }
-
+        
         return NextResponse.json({
             token: data.token,
-            org: orgName
+            org: orgName,
+            accountType: accountType
         });
     } catch (error: any) {
         console.error("API Route Error:", error);

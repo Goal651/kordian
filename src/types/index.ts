@@ -58,6 +58,7 @@ export interface InstallationInfo {
   permissions: Record<string, string>;
   installedAt: string;
   installedBy: string;
+  accountType: 'User' | 'Organization';
 }
 
 
@@ -83,4 +84,5 @@ export interface AppInstallationState {
   selectedMemberId: string | null;
   selectedRepoName: string | null;
   theme: 'light' | 'dark';
+  accountType: 'User' | 'Organization' | null;
 }

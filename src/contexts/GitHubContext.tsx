@@ -7,7 +7,7 @@ import { useGitHubSettings } from "@/hooks/github/useGitHubSettings";
 
 interface GitHubContextType {
   state: AppInstallationState;
-  selectOrg: (org: string, installationId: number) => void;
+  selectOrg: (org: string, installationId: number, accountType?: 'User' | 'Organization') => void;
   installApp: () => void;
   fetchOrgData: (force?: boolean) => Promise<void>;
   fetchMembers: (force?: boolean) => Promise<void>;
@@ -55,7 +55,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     orgCreatedAt: null,
     selectedMemberId: null,
     selectedRepoName: null,
-    theme: 'dark'
+    theme: 'dark',
+    accountType: null
   });
 
   const [loadingStates, setLoadingStates] = useState({
@@ -110,7 +111,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
 
       const storedInstallation = localStorage.getItem(STORAGE_KEYS.INSTALLATION);
       if (storedInstallation) {
-        const { installed, selectedOrg, installationId, rankingWeights } = JSON.parse(storedInstallation);
+        const { installed, selectedOrg, installationId, rankingWeights, accountType } = JSON.parse(storedInstallation);
         if (installed && installationId) {
           setState(prev => ({
             ...prev,
@@ -118,7 +119,8 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
             selectedOrg,
             installationId,
             rankingWeights: rankingWeights || prev.rankingWeights,
-            installationStatus: 'installed'
+            installationStatus: 'installed',
+            accountType: accountType || null
           }));
         }
       }

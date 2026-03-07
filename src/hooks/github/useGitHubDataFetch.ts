@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { AppInstallationState, SecurityAlert } from "@/types";
+import { AppInstallationState, SecurityAlert, Member } from "@/types";
 import { STORAGE_KEYS, CACHE_KEY, CACHE_DURATION } from "./constants";
 
 export function useGitHubDataFetch(
@@ -65,11 +65,14 @@ export function useGitHubDataFetch(
       }
 
       const currentOrg = org || state.selectedOrg;
+      const isOrg = (org && state.accountType === 'Organization') || (!org && state.accountType === 'Organization') || state.accountType === null;
 
       const query = `
-        query($org: String!) {
-          organization(login: $org) {
-            createdAt
+        query($owner: String!) {
+          repositoryOwner(login: $owner) {
+            ... on Organization {
+              createdAt
+            }
             repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
               nodes {
                 name
@@ -127,12 +130,12 @@ export function useGitHubDataFetch(
         },
         body: JSON.stringify({
           query,
-          variables: { org: currentOrg },
+          variables: { owner: currentOrg },
         }),
       });
 
       const json = await res.json();
-      const nodes = json.data?.organization?.repositories?.nodes || [];
+      const nodes = json.data?.repositoryOwner?.repositories?.nodes || [];
 
       const repos = nodes.map((r: any) => {
         const commits = r.defaultBranchRef?.target?.history?.nodes || [];
@@ -175,12 +178,12 @@ export function useGitHubDataFetch(
         ...prev,
         repos,
         selectedOrg: currentOrg,
-        orgCreatedAt: json.data?.organization?.createdAt || prev.orgCreatedAt
+        orgCreatedAt: json.data?.repositoryOwner?.createdAt || prev.orgCreatedAt
       }));
 
       saveToCache({
         repos,
-        orgCreatedAt: json.data?.organization?.createdAt
+        orgCreatedAt: json.data?.repositoryOwner?.createdAt
       });
     } catch (err: any) {
       console.error("Failed to fetch repos:", err.message);
@@ -216,24 +219,44 @@ export function useGitHubDataFetch(
       const toDate = state.dateRange?.to || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
       const query = `
-        query($org: String!, $from: DateTime!, $to: DateTime!) {
-          organization(login: $org) {
-            membersWithRole(first: 50) {
-              nodes {
-                login
-                name
-                avatarUrl
-                contributionsCollection(from: $from, to: $to) {
-                  totalCommitContributions
-                  totalPullRequestContributions
-                  totalPullRequestReviewContributions
-                  commitContributionsByRepository(maxRepositories: 50) {
-                    repository {
-                      name
+        query($owner: String!, $from: DateTime!, $to: DateTime!) {
+          repositoryOwner(login: $owner) {
+            ... on Organization {
+              membersWithRole(first: 50) {
+                nodes {
+                  login
+                  name
+                  avatarUrl
+                  contributionsCollection(from: $from, to: $to) {
+                    totalCommitContributions
+                    totalPullRequestContributions
+                    totalPullRequestReviewContributions
+                    commitContributionsByRepository(maxRepositories: 50) {
+                      repository {
+                        name
+                      }
+                      contributions {
+                        totalCount
+                      }
                     }
-                    contributions {
-                      totalCount
-                    }
+                  }
+                }
+              }
+            }
+            ... on User {
+              login
+              name
+              avatarUrl
+              contributionsCollection(from: $from, to: $to) {
+                totalCommitContributions
+                totalPullRequestContributions
+                totalPullRequestReviewContributions
+                commitContributionsByRepository(maxRepositories: 50) {
+                  repository {
+                    name
+                  }
+                  contributions {
+                    totalCount
                   }
                 }
               }
@@ -251,7 +274,7 @@ export function useGitHubDataFetch(
         body: JSON.stringify({
           query,
           variables: {
-            org: state.selectedOrg,
+            owner: state.selectedOrg,
             from: fromDate.toISOString(),
             to: toDate.toISOString(),
           },
@@ -259,7 +282,16 @@ export function useGitHubDataFetch(
       });
 
       const json = await res.json();
-      const nodes = json.data?.organization?.membersWithRole?.nodes || [];
+      const owner = json.data?.repositoryOwner;
+      let nodes: any[] = [];
+      
+      if (owner?.membersWithRole) {
+        // It's an Organization
+        nodes = owner.membersWithRole.nodes;
+      } else if (owner) {
+        // It's a User
+        nodes = [owner];
+      }
 
       const members = nodes.map((node: any) => {
         const stats = node.contributionsCollection;
@@ -274,7 +306,7 @@ export function useGitHubDataFetch(
           username: node.login,
           avatar: node.avatarUrl,
           role: "Member",
-          status: (commits + prs + reviews > 0) ? "active" : "inactive",
+          status: ((commits + prs + reviews > 0) ? "active" : "inactive") as "active" | "inactive",
           commits,
           prs,
           reviews,
@@ -282,9 +314,10 @@ export function useGitHubDataFetch(
           score: (prs * state.rankingWeights.prs) + (reviews * state.rankingWeights.reviews) + (commits * state.rankingWeights.commits)
         };
       }).sort((a: any, b: any) => b.score - a.score);
-
-      setState(prev => ({ ...prev, members }));
-      saveToCache({ members });
+ 
+      const typedMembers: Member[] = members;
+      setState(prev => ({ ...prev, members: typedMembers }));
+      saveToCache({ members: typedMembers });
     } catch (err) {
       console.error("Failed to fetch members via GraphQL", err);
     } finally {
@@ -315,20 +348,23 @@ export function useGitHubDataFetch(
       });
       const { token } = await tokenRes.json();
 
+      const isOrg = state.accountType === 'Organization';
+      const baseApiUrl = isOrg ? `https://api.github.com/orgs/${state.selectedOrg}` : `https://api.github.com/user`;
+
       // 1. Fetch Dependabot alerts
-      const depRes = await fetch(`https://api.github.com/orgs/${state.selectedOrg}/dependabot/alerts?state=open`, {
+      const depRes = await fetch(`${baseApiUrl}/dependabot/alerts?state=open`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const depData = await depRes.json();
 
       // 2. Fetch Secret Scanning alerts
-      const secretRes = await fetch(`https://api.github.com/orgs/${state.selectedOrg}/secret-scanning/alerts?state=open`, {
+      const secretRes = await fetch(`${baseApiUrl}/secret-scanning/alerts?state=open`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const secretData = await secretRes.json();
 
       // 3. Fetch Code Scanning alerts
-      const codeRes = await fetch(`https://api.github.com/orgs/${state.selectedOrg}/code-scanning/alerts?state=open`, {
+      const codeRes = await fetch(`${baseApiUrl}/code-scanning/alerts?state=open`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const codeData = await codeRes.json();

@@ -9,13 +9,16 @@ export function useGitHubSettings(
   fetchMembers: (force?: boolean) => Promise<void>,
   fetchSecurityAlerts: (force?: boolean) => Promise<void>
 ) {
-  const selectOrg = useCallback((org: string, installationId: number) => {
+  const selectOrg = useCallback((org: string, installationId: number, accountType?: 'User' | 'Organization') => {
+    const finalAccountType = accountType || 'Organization'; // Default to Org if unknown
+    
     setState(prev => ({
       ...prev,
       installed: true,
       selectedOrg: org,
       installationId,
-      installationStatus: 'installed'
+      installationStatus: 'installed',
+      accountType: finalAccountType
     }));
 
     localStorage.setItem(
@@ -24,7 +27,8 @@ export function useGitHubSettings(
         installed: true,
         selectedOrg: org,
         installationId,
-        rankingWeights: state.rankingWeights
+        rankingWeights: state.rankingWeights,
+        accountType: finalAccountType
       })
     );
 

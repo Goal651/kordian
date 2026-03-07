@@ -6,7 +6,7 @@ export function useGitHubAuthFlow(
   state: AppInstallationState,
   setState: React.Dispatch<React.SetStateAction<AppInstallationState>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
-  selectOrg: (org: string, installationId: number) => void
+  selectOrg: (org: string, installationId: number, accountType?: 'User' | 'Organization') => void
 ) {
   const installToOrganization = useCallback(() => {
     window.location.href = `https://github.com/apps/${GITHUB_CONFIG.APP_NAME}/installations/new`;
@@ -30,7 +30,8 @@ export function useGitHubAuthFlow(
           organizationLogin: inst.account.login,
           permissions: inst.permissions,
           installedAt: inst.created_at,
-          installedBy: data.user?.login || "unknown"
+          installedBy: data.user?.login || "unknown",
+          accountType: inst.account.type
         }));
       } else if (response.status === 401) {
         localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
@@ -56,7 +57,7 @@ export function useGitHubAuthFlow(
         const installations = await getUserInstallations();
         if (installations.length > 0) {
           const firstInstallation = installations[0];
-          selectOrg(firstInstallation.organizationLogin, firstInstallation.installationId);
+          selectOrg(firstInstallation.organizationLogin, firstInstallation.installationId, firstInstallation.accountType);
           return;
         }
         installToOrganization();
@@ -99,7 +100,8 @@ export function useGitHubAuthFlow(
             organizationLogin: inst.account.login,
             permissions: inst.permissions,
             installedAt: inst.created_at,
-            installedBy: data.user?.login || "unknown"
+            installedBy: data.user?.login || "unknown",
+            accountType: inst.account.type
           }));
 
           localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installations));
@@ -151,7 +153,8 @@ export function useGitHubAuthFlow(
           organizationLogin: inst.account.login,
           permissions: inst.permissions,
           installedAt: inst.created_at,
-          installedBy: inst.installedBy || "unknown"
+          installedBy: inst.installedBy || "unknown",
+          accountType: inst.account.type
         }));
 
         localStorage.setItem(STORAGE_KEYS.INSTALLATIONS, JSON.stringify(installationList));
@@ -197,7 +200,8 @@ export function useGitHubAuthFlow(
       orgCreatedAt: null,
       selectedMemberId: null,
       selectedRepoName: null,
-      theme: 'dark'
+      theme: 'dark',
+      accountType: null
     });
 
     localStorage.removeItem(STORAGE_KEYS.INSTALLATION);
@@ -208,7 +212,7 @@ export function useGitHubAuthFlow(
   const switchInstallation = useCallback((installationId: number) => {
     const installation = state.installations.find(inst => inst.installationId === installationId);
     if (installation) {
-      selectOrg(installation.organizationLogin, installation.installationId);
+      selectOrg(installation.organizationLogin, installation.installationId, installation.accountType);
     }
   }, [state.installations, selectOrg]);
 

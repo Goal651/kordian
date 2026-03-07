@@ -42,6 +42,7 @@ export function getInstallationState(): AppInstallationState {
       selectedMemberId: null,
       selectedRepoName: null,
       theme: 'dark',
+      accountType: null,
     };
   }
 
@@ -64,6 +65,7 @@ export function getInstallationState(): AppInstallationState {
       selectedMemberId: null,
       selectedRepoName: null,
       theme: 'dark',
+      accountType: null,
     };
   }
 }
