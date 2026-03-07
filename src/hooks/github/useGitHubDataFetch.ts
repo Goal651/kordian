@@ -228,12 +228,28 @@ export function useGitHubDataFetch(
                   name
                   avatarUrl
                   contributionsCollection(from: $from, to: $to) {
-                    totalCommitContributions
-                    totalPullRequestContributions
-                    totalPullRequestReviewContributions
                     commitContributionsByRepository(maxRepositories: 50) {
                       repository {
                         name
+                        owner { login }
+                      }
+                      contributions {
+                        totalCount
+                      }
+                    }
+                    pullRequestContributionsByRepository(maxRepositories: 50) {
+                      repository {
+                        name
+                        owner { login }
+                      }
+                      contributions {
+                        totalCount
+                      }
+                    }
+                    pullRequestReviewContributionsByRepository(maxRepositories: 50) {
+                      repository {
+                        name
+                        owner { login }
                       }
                       contributions {
                         totalCount
@@ -248,12 +264,28 @@ export function useGitHubDataFetch(
               name
               avatarUrl
               contributionsCollection(from: $from, to: $to) {
-                totalCommitContributions
-                totalPullRequestContributions
-                totalPullRequestReviewContributions
                 commitContributionsByRepository(maxRepositories: 50) {
                   repository {
                     name
+                    owner { login }
+                  }
+                  contributions {
+                    totalCount
+                  }
+                }
+                pullRequestContributionsByRepository(maxRepositories: 50) {
+                  repository {
+                    name
+                    owner { login }
+                  }
+                  contributions {
+                    totalCount
+                  }
+                }
+                pullRequestReviewContributionsByRepository(maxRepositories: 50) {
+                  repository {
+                    name
+                    owner { login }
                   }
                   contributions {
                     totalCount
@@ -295,11 +327,21 @@ export function useGitHubDataFetch(
 
       const members = nodes.map((node: any) => {
         const stats = node.contributionsCollection;
-        const commits = stats.totalCommitContributions;
-        const prs = stats.totalPullRequestContributions;
-        const reviews = stats.totalPullRequestReviewContributions;
         
-        const contributedRepos = stats.commitContributionsByRepository?.map((repoContr: any) => repoContr.repository.name) || [];
+        // Helper to filter and sum contributions for the selected org/user
+        const filterAndSum = (repos: any[]) => {
+          return repos
+            ?.filter((r: any) => r.repository.owner.login.toLowerCase() === state.selectedOrg?.toLowerCase())
+            .reduce((sum: number, r: any) => sum + r.contributions.totalCount, 0) || 0;
+        };
+
+        const commits = filterAndSum(stats.commitContributionsByRepository);
+        const prs = filterAndSum(stats.pullRequestContributionsByRepository);
+        const reviews = filterAndSum(stats.pullRequestReviewContributionsByRepository);
+        
+        const contributedRepos = stats.commitContributionsByRepository
+          ?.filter((r: any) => r.repository.owner.login.toLowerCase() === state.selectedOrg?.toLowerCase())
+          .map((repoContr: any) => repoContr.repository.name) || [];
 
         return {
           name: node.name || node.login,
