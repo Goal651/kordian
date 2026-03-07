@@ -38,7 +38,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-border px-6 flex-shrink-0">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 overflow-hidden">
-          <img src="/icon.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
+          <img src="/icon.png" alt="Nexus Logo" className="h-full w-full object-cover" />
         </div>
         <div>
           <h1 className="text-sm font-semibold text-foreground">Nexus</h1>

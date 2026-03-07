@@ -74,7 +74,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const STORAGE_KEY = "gitguard_date_range";
+const STORAGE_KEY = "nexus_date_range";
 
 // Month/Year Picker Component
 function MonthYearPicker({ 

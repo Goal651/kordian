@@ -51,7 +51,7 @@ export default function Page() {
                     <h1 className="text-2xl font-bold text-foreground">Settings</h1>
                 </div>
                 <p className="text-muted-foreground">
-                    Configure your GitGuard environment and ranking algorithms
+                    Configure your Nexus environment and ranking algorithms
                 </p>
             </div>
 
@@ -178,7 +178,7 @@ export default function Page() {
                         <CardHeader>
                             <CardTitle>Interface Preferences</CardTitle>
                             <CardDescription>
-                                Customize how GitGuard looks on your screen.
+                                Customize how Nexus looks on your screen.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">

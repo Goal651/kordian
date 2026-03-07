@@ -12,7 +12,7 @@ export function LoadingScreen() {
                 </div>
                 <div className="text-center space-y-1 mt-4">
                     <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                        GitGuard
+                        Nexus
                     </h2>
                     <p className="text-sm text-muted-foreground animate-pulse">
                         Verifying installation...

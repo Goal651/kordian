@@ -22,9 +22,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-background/80 backdrop-blur-md z-30 flex items-center px-4 justify-between">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 overflow-hidden">
-            <img src="/icon.png" alt="GitGuard Logo" className="h-full w-full object-cover" />
+            <img src="/icon.png" alt="Nexus Logo" className="h-full w-full object-cover" />
           </div>
-          <span className="font-semibold">GitGuard</span>
+          <span className="font-semibold text-foreground">Nexus</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />

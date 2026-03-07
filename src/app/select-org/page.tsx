@@ -42,7 +42,7 @@ function SelectOrgContent() {
                         Connect Your Organization
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Install the GitHub App to allow GitGuard to scan your organization's repos.
+                        Install the GitHub App to allow Nexus to scan your organization's repos.
                     </p>
                 </div>
 

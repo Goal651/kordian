@@ -108,7 +108,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const storedDateRange = localStorage.getItem('gitguard_date_range');
+      const storedDateRange = localStorage.getItem('nexus_date_range');
       if (storedDateRange) {
         const parsed = JSON.parse(storedDateRange);
         setState(prev => ({ 
@@ -159,7 +159,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, [authFlow.handleInstallationCallback, hydrateFromStorage]);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('gitguard_theme') as 'light' | 'dark';
+    const savedTheme = localStorage.getItem('nexus_theme') as 'light' | 'dark';
     if (savedTheme) {
       setState(prev => ({ ...prev, theme: savedTheme }));
       if (savedTheme === 'dark') {

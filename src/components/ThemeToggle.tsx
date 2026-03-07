@@ -21,7 +21,7 @@ export function ThemeToggle() {
     const toggleTheme = () => {
         const newTheme = isDark ? 'light' : 'dark';
         setState(prev => ({ ...prev, theme: newTheme }));
-        localStorage.setItem('gitguard_theme', newTheme);
+        localStorage.setItem('nexus_theme', newTheme);
     };
 
     return (
