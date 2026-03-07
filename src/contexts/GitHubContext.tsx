@@ -29,6 +29,7 @@ interface GitHubContextType {
   switchInstallation: (installationId: number) => void;
   removeInstallation: (installationId: number) => void;
   installToOrganization: () => void;
+  setState: React.Dispatch<React.SetStateAction<AppInstallationState>>;
 }
 
 const GitHubContext = createContext<GitHubContextType | undefined>(undefined);
@@ -51,7 +52,10 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
       to: new Date(),
       label: "This month"
     },
-    orgCreatedAt: null
+    orgCreatedAt: null,
+    selectedMemberId: null,
+    selectedRepoName: null,
+    theme: 'dark'
   });
 
   const [loadingStates, setLoadingStates] = useState({
@@ -134,6 +138,19 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('gitguard_theme') as 'light' | 'dark';
+    if (savedTheme) {
+      setState(prev => ({ ...prev, theme: savedTheme }));
+      if (savedTheme === 'dark') {
+          window.document.documentElement.classList.add('dark');
+      } else {
+          window.document.documentElement.classList.remove('dark');
+      }
+    } else {
+        // Default to dark if no preference
+        window.document.documentElement.classList.add('dark');
+    }
+    
     if (state.currentUserToken && state.installationStatus === 'not_installed') {
       authFlow.checkExistingInstallations();
     }
@@ -150,6 +167,7 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
     fetchSecurityAlerts,
     updateRankingWeights,
     updateDateRange,
+    setState,
   };
 
   return (

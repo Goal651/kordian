@@ -1,5 +1,6 @@
 export interface Contributor {
   login: string;
+  name?: string;
   avatar: string;
 }
 
@@ -15,6 +16,8 @@ export interface Repository {
   status: "healthy" | "warning" | "critical";
   alerts: number;
   contributors: Contributor[];
+  url?: string;
+  pushedAt: string;
 }
 
 export interface Member {
@@ -26,6 +29,7 @@ export interface Member {
   commits: number;
   prs: number;
   reviews: number;
+  contributedRepos: string[];
 }
 
 export interface SecurityAlert {
@@ -36,7 +40,9 @@ export interface SecurityAlert {
   severity: "critical" | "high" | "medium" | "low";
   detected: string;
   path: string;
-  url?: string;
+  url: string;
+  description?: string;
+  remediation?: string;
 }
 
 export interface RankingWeights {
@@ -74,4 +80,7 @@ export interface AppInstallationState {
   installationStatus: 'checking' | 'installed' | 'not_installed' | 'error';
   dateRange: DateRange | null;
   orgCreatedAt: string | null;
+  selectedMemberId: string | null;
+  selectedRepoName: string | null;
+  theme: 'light' | 'dark';
 }

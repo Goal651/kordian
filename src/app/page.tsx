@@ -10,6 +10,8 @@ import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { TopContributors } from "@/components/dashboard/TopContributors";
 import { RepoHealthCard } from "@/components/dashboard/RepoHealthCard";
 import { DateRangeSelector } from "@/components/DateRangeSelector";
+import { MemberDetailView } from "@/components/dashboard/MemberDetailView";
+import { RepoDetailView } from "@/components/dashboard/RepoDetailView";
 import {
     GitBranch,
     Users,
@@ -57,6 +59,22 @@ export default function Page() {
         loadingStates.fetchingAlerts ||
         loadingStates.fetchingPRs ||
         loadingStates.fetchingOrgData
+
+    if (state.selectedMemberId) {
+        return (
+            <DashboardLayout>
+                <MemberDetailView />
+            </DashboardLayout>
+        );
+    }
+
+    if (state.selectedRepoName) {
+        return (
+            <DashboardLayout>
+                <RepoDetailView />
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>

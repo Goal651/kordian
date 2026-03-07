@@ -14,6 +14,12 @@ export function SecurityAlertsCard({ loading }: { loading: boolean }) {
   const dependabotHigh = state.alerts.filter(a => a.type === "Dependency" && a.severity === "high").length;
   const dependabotMedium = state.alerts.filter(a => a.type === "Dependency" && a.severity === "medium").length;
 
+  const codeCritical = state.alerts.filter(a => a.type === "Code" && a.severity === "critical").length;
+  const codeHigh = state.alerts.filter(a => a.type === "Code" && a.severity === "high").length;
+  const codeMedium = state.alerts.filter(a => a.type === "Code" && a.severity === "medium").length;
+
+  const secretCritical = state.alerts.filter(a => a.type === "Secret" && a.severity === "critical").length;
+
   const alertsDisplay = [
     {
       type: "Dependabot",
@@ -25,14 +31,14 @@ export function SecurityAlertsCard({ loading }: { loading: boolean }) {
     {
       type: "Code Scanning",
       icon: Bug,
-      critical: 0,
-      high: 0,
-      medium: 0,
+      critical: codeCritical,
+      high: codeHigh,
+      medium: codeMedium,
     },
     {
       type: "Secret Scanning",
       icon: Key,
-      critical: 0,
+      critical: secretCritical,
       high: 0,
       medium: 0,
     },

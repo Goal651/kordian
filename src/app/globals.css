@@ -13,7 +13,82 @@
 
 @layer base {
     :root {
-        /* Core Colors - Black & White Foundation */
+        /* LIGHT THEME (Default) */
+        --background: 0 0% 100%;
+        --foreground: 0 0% 4%;
+
+        /* Surface Colors */
+        --card: 0 0% 98%;
+        --card-foreground: 0 0% 4%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 4%;
+
+        /* Brand Colors */
+        --primary: 0 0% 40%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 0 0% 92%;
+        --secondary-foreground: 0 0% 20%;
+
+        /* Semantic Colors */
+        --muted: 0 0% 95%;
+        --muted-foreground: 0 0% 40%;
+        --accent: 0 0% 40%;
+        --accent-foreground: 0 0% 100%;
+
+        /* Status Colors */
+        --destructive: 0 84% 45%;
+        --destructive-foreground: 0 0% 100%;
+        --success: 152 76% 35%;
+        --success-foreground: 0 0% 100%;
+        --warning: 38 95% 45%;
+        --warning-foreground: 0 0% 100%;
+
+        /* UI Elements */
+        --border: 0 0% 88%;
+        --input: 0 0% 88%;
+        --ring: 0 0% 40%;
+        --radius: 0.75rem;
+
+        /* Glow Effects */
+        --glow-primary: 0 0 15px hsl(0 0% 40% / 0.15);
+        --glow-success: 0 0 15px hsl(152 76% 35% / 0.15);
+        --glow-warning: 0 0 15px hsl(38 95% 45% / 0.15);
+        --glow-destructive: 0 0 15px hsl(0 84% 45% / 0.15);
+
+        /* Sidebar Specific */
+        --sidebar-background: 0 0% 97%;
+        --sidebar-foreground: 0 0% 20%;
+        --sidebar-primary: 0 0% 40%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 0 0% 92%;
+        --sidebar-accent-foreground: 0 0% 4%;
+        --sidebar-border: 0 0% 88%;
+        --sidebar-ring: 0 0% 40%;
+
+        /* Glassmorphism Variables */
+        --glass-bg: 0 0% 100%;
+        --glass-border: 0 0% 0%;
+        --blur-amount: 10px;
+        --blur-strong: 14px;
+        --blur-subtle: 6px;
+
+        /* Elevation Shadows */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+        --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+
+        /* Animation Timings */
+        --duration-fast: 150ms;
+        --duration-normal: 250ms;
+        --duration-slow: 350ms;
+        --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .dark {
+        /* DARK THEME */
         --background: 0 0% 6%;
         --foreground: 0 0% 96%;
 
@@ -47,9 +122,8 @@
         --border: 0 0% 16%;
         --input: 0 0% 16%;
         --ring: 0 0% 50%;
-        --radius: 0.75rem;
 
-        /* Glow Effects - For hover states and emphasis */
+        /* Glow Effects */
         --glow-primary: 0 0 20px hsl(0 0% 50% / 0.3);
         --glow-success: 0 0 20px hsl(152 76% 45% / 0.3);
         --glow-warning: 0 0 20px hsl(38 95% 55% / 0.3);
@@ -68,23 +142,13 @@
         /* Glassmorphism Variables */
         --glass-bg: 0 0% 0%;
         --glass-border: 255 255 255;
-        --blur-amount: 12px;
-        --blur-strong: 16px;
-        --blur-subtle: 8px;
 
-        /* Elevation Shadows - Multi-layer depth system */
+        /* Elevation Shadows */
         --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2);
         --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
         --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
-
-        /* Animation Timings - Consistent motion design */
-        --duration-fast: 150ms;
-        --duration-normal: 250ms;
-        --duration-slow: 350ms;
-        --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-        --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 }
 

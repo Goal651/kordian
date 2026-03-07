@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
 export function TopContributors({ loading }: { loading: boolean }) {
-  const { state } = useGitHubApp();
+  const { state, setState } = useGitHubApp();
   const members = state.members.slice(0, 5)
 
 
@@ -24,7 +24,8 @@ export function TopContributors({ loading }: { loading: boolean }) {
           members.map((contributor, index) => (
             <div
               key={contributor.username}
-              className="flex items-center justify-between rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors"
+              onClick={() => setState(prev => ({ ...prev, selectedMemberId: contributor.username }))}
+              className="flex items-center justify-between rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 overflow-hidden text-xs font-semibold text-primary">

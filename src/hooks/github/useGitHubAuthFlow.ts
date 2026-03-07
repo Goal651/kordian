@@ -194,7 +194,10 @@ export function useGitHubAuthFlow(
         to: new Date(now.getFullYear(), now.getMonth() + 1, 0),
         label: "This month"
       },
-      orgCreatedAt: null
+      orgCreatedAt: null,
+      selectedMemberId: null,
+      selectedRepoName: null,
+      theme: 'dark'
     });
 
     localStorage.removeItem(STORAGE_KEYS.INSTALLATION);

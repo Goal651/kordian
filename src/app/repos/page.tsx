@@ -31,9 +31,10 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { RepoDetailView } from "@/components/dashboard/RepoDetailView";
 
 export default function Page() {
-    const { state, fetchOrgData, isLoading } = useGitHubApp();
+    const { state, setState, fetchOrgData, isLoading } = useGitHubApp();
     const router = useRouter();
     const [filter, setFilter] = useState<"all" | "healthy" | "warning" | "critical">("all");
     const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +58,14 @@ export default function Page() {
         const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesStatus && matchesSearch;
     });
+
+    if (state.selectedRepoName) {
+        return (
+            <DashboardLayout>
+                <RepoDetailView />
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -140,11 +149,15 @@ export default function Page() {
                                                 {repo.contributors.slice(0, 5).map((c) => (
                                                     <HoverCard key={c.login}>
                                                         <HoverCardTrigger asChild>
-                                                            <img
-                                                                className="inline-block h-5 w-5 rounded-full ring-2 ring-background grayscale hover:grayscale-0 transition-all cursor-pointer"
-                                                                src={c.avatar}
-                                                                alt={c.login}
-                                                            />
+                                                              <img
+                                                                  className="inline-block h-5 w-5 rounded-full ring-2 ring-background grayscale hover:grayscale-0 transition-all cursor-pointer"
+                                                                  src={c.avatar}
+                                                                  alt={c.login}
+                                                                  onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      setState(prev => ({ ...prev, selectedMemberId: c.login }));
+                                                                  }}
+                                                              />
                                                         </HoverCardTrigger>
                                                         <HoverCardContent className="w-80 bg-background/80">
                                                             <div className="flex justify-between space-x-4 ">
@@ -178,8 +191,10 @@ export default function Page() {
                                     </div>
                                 </div>
                                 <Button variant="ghost" size="sm"
-                            
-                                    onClick={() => window.open(`https://github.com/${state.selectedOrg}/${repo.name}`, "_blank")}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setState(prev => ({ ...prev, selectedRepoName: repo.name }));
+                                    }}
                                 >View Details</Button>
                             </div>
                         </div>

@@ -38,6 +38,10 @@ export function getInstallationState(): AppInstallationState {
       currentUserToken: null,
       installationStatus: 'checking',
       dateRange: null,
+      orgCreatedAt: null,
+      selectedMemberId: null,
+      selectedRepoName: null,
+      theme: 'dark',
     };
   }
 
@@ -56,6 +60,10 @@ export function getInstallationState(): AppInstallationState {
       currentUserToken: null,
       installationStatus: 'checking',
       dateRange: null,
+      orgCreatedAt: null,
+      selectedMemberId: null,
+      selectedRepoName: null,
+      theme: 'dark',
     };
   }
 }

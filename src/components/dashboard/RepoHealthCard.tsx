@@ -11,19 +11,21 @@ const StatusIcon = ({ status }: { status: string }) => {
 };
 
 export function RepoHealthCard({ loading = false }: { loading?: boolean }) {
-  const { state } = useGitHubApp();
+  const { state, setState } = useGitHubApp();
 
-  state.repos.map(repo => {
-    const data = state.alerts.filter(alert => alert.repo == repo.name)[0]
-    if (data && (data.severity == 'critical' || data.severity == 'high')) {
-      repo.status = 'critical' 
-    }
-    return repo
-  })
+  // Derive repo health without mutating state
+  const reposWithStatus = state.repos.map(repo => {
+    const repoAlerts = state.alerts.filter(alert => alert.repo === repo.name);
+    const hasCritical = repoAlerts.some(a => a.severity === 'critical' || a.severity === 'high');
+    return {
+      ...repo,
+      status: hasCritical ? 'critical' : (repo.alerts > 0 ? 'warning' : 'healthy')
+    };
+  });
 
 
   // Filter for repos that need attention (critical or warning)
-  const unhealthyRepos = state.repos
+  const unhealthyRepos = reposWithStatus
     .filter(r => r.status !== "healthy")
     .sort((a, b) => b.alerts - a.alerts)
     .slice(0, 5); // Show top 5
@@ -75,7 +77,11 @@ export function RepoHealthCard({ loading = false }: { loading?: boolean }) {
               </tr>
             ) : (
               unhealthyRepos.map((repo) => (
-                <tr key={repo.name} className="hover:bg-secondary/30 transition-colors">
+                <tr 
+                  key={repo.name} 
+                  onClick={() => setState(prev => ({ ...prev, selectedRepoName: repo.name }))}
+                  className="hover:bg-secondary/30 transition-colors cursor-pointer group"
+                >
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       {repo.visibility === "private" ? <Lock className="h-3 w-3 text-muted-foreground" /> : <Unlock className="h-3 w-3 text-muted-foreground" />}

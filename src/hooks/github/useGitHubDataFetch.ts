@@ -78,28 +78,33 @@ export function useGitHubDataFetch(
                 stargazerCount
                 forkCount
                 pushedAt
-                languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
+                url
+                languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
                   nodes {
                     name
                     color
                   }
                 }
-                vulnerabilityAlerts(first: 100, states: OPEN) {
+                vulnerabilityAlerts(first: 10, states: OPEN) {
                   totalCount
                   nodes {
                     securityAdvisory {
                       severity
+                      summary
+                      description
                     }
+                    htmlUrl
                   }
                 }
                 defaultBranchRef {
                   target {
                     ... on Commit {
-                      history(first: 5) {
+                      history(first: 20) {
                         nodes {
                           author {
                             user {
                               login
+                              name
                               avatarUrl
                             }
                           }
@@ -136,6 +141,7 @@ export function useGitHubDataFetch(
           if (c.author?.user) {
             contributorsMap.set(c.author.user.login, {
               login: c.author.user.login,
+              name: c.author.user.name || c.author.user.login,
               avatar: c.author.user.avatarUrl
             });
           }
@@ -144,38 +150,38 @@ export function useGitHubDataFetch(
         const languageNode = r.languages?.nodes?.[0];
         const alertCount = r.vulnerabilityAlerts?.totalCount || 0;
         const alertNodes = r.vulnerabilityAlerts?.nodes || [];
+        
         const hasCritical = alertNodes.some((a: any) => a.securityAdvisory?.severity === "CRITICAL");
         const hasHigh = alertNodes.some((a: any) => a.securityAdvisory?.severity === "HIGH");
-        const lastPushDate = new Date(r.pushedAt);
-        const daysSinceLastPush = Math.floor((Date.now() - lastPushDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let status: "healthy" | "warning" | "critical" = "healthy";
-        if (alertCount > 0) {
-          status = (hasCritical || hasHigh) ? "critical" : "warning";
-        } else {
-          if (daysSinceLastPush > 180) status = "critical";
-          else if (daysSinceLastPush > 90) status = "warning";
-        }
 
         return {
           name: r.name,
-          description: r.description || "",
-          language: languageNode?.name || "Unknown",
-          languageColor: languageNode?.color || "#999",
+          description: r.description || "No description provided",
+          language: languageNode?.name || "Other",
+          languageColor: languageNode?.color || "#555",
           visibility: r.isPrivate ? "private" : "public",
           stars: r.stargazerCount,
           forks: r.forkCount,
-          lastCommit: new Date(r.pushedAt).toLocaleString(),
+          lastCommit: new Date(r.pushedAt).toLocaleDateString(),
+          pushedAt: r.pushedAt,
+          status: hasCritical || hasHigh ? "critical" : alertCount > 0 ? "warning" : "healthy",
           alerts: alertCount,
-          status,
-          contributors
+          contributors: contributors,
+          url: r.url
         };
       });
 
-      const orgCreatedAt = json.data?.organization?.createdAt || null;
+      setState(prev => ({
+        ...prev,
+        repos,
+        selectedOrg: currentOrg,
+        orgCreatedAt: json.data?.organization?.createdAt || prev.orgCreatedAt
+      }));
 
-      setState(prev => ({ ...prev, repos, orgCreatedAt }));
-      saveToCache({ repos, orgCreatedAt });
+      saveToCache({
+        repos,
+        orgCreatedAt: json.data?.organization?.createdAt
+      });
     } catch (err: any) {
       console.error("Failed to fetch repos:", err.message);
     } finally {
@@ -221,6 +227,14 @@ export function useGitHubDataFetch(
                   totalCommitContributions
                   totalPullRequestContributions
                   totalPullRequestReviewContributions
+                  commitContributionsByRepository(maxRepositories: 50) {
+                    repository {
+                      name
+                    }
+                    contributions {
+                      totalCount
+                    }
+                  }
                 }
               }
             }
@@ -252,6 +266,8 @@ export function useGitHubDataFetch(
         const commits = stats.totalCommitContributions;
         const prs = stats.totalPullRequestContributions;
         const reviews = stats.totalPullRequestReviewContributions;
+        
+        const contributedRepos = stats.commitContributionsByRepository?.map((repoContr: any) => repoContr.repository.name) || [];
 
         return {
           name: node.name || node.login,
@@ -262,6 +278,7 @@ export function useGitHubDataFetch(
           commits,
           prs,
           reviews,
+          contributedRepos,
           score: (prs * state.rankingWeights.prs) + (reviews * state.rankingWeights.reviews) + (commits * state.rankingWeights.commits)
         };
       }).sort((a: any, b: any) => b.score - a.score);
@@ -327,7 +344,9 @@ export function useGitHubDataFetch(
           severity: a.security_advisory.severity,
           detected: new Date(a.created_at).toLocaleDateString(),
           path: "package.json",
-          url: a.html_url
+          url: a.html_url,
+          description: a.security_advisory.description,
+          remediation: a.security_advisory.remediation || `Update ${a.security_vulnerability.package.name} to a secure version.`
         }));
       }
 
@@ -340,7 +359,9 @@ export function useGitHubDataFetch(
           severity: "critical",
           detected: new Date(a.created_at).toLocaleDateString(),
           path: a.locations_url ? "multiple locations" : "unknown",
-          url: a.html_url
+          url: a.html_url,
+          description: `A secret of type ${a.secret_type} was detected.`,
+          remediation: "Revoke the secret immediately and update your configuration."
         }));
       }
 
@@ -353,7 +374,9 @@ export function useGitHubDataFetch(
           severity: a.rule.severity === "error" ? "critical" : a.rule.severity === "warning" ? "high" : "medium",
           detected: new Date(a.created_at).toLocaleDateString(),
           path: a.most_recent_instance?.location?.path || "unknown",
-          url: a.html_url
+          url: a.html_url,
+          description: a.rule.full_description || a.rule.description,
+          remediation: "Review the code scanning alert and apply the suggested fix."
         }));
       }
 

@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { Member } from "@/types";
+import { MemberDetailView } from "@/components/dashboard/MemberDetailView";
 
 // Custom tooltip with better styling
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -43,7 +44,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Page() {
-    const { state, fetchMembers, isLoading } = useGitHubApp();
+    const { state, setState, fetchMembers, isLoading } = useGitHubApp();
     const router = useRouter();
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +65,14 @@ export default function Page() {
         m.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    if (state.selectedMemberId) {
+        return (
+            <DashboardLayout>
+                <MemberDetailView />
+            </DashboardLayout>
+        );
+    }
 
     const chartData = members.slice(0, 5).map((m: Member) => ({
         name: m.username,
@@ -178,7 +187,11 @@ export default function Page() {
                         </thead>
                         <tbody className="divide-y divide-border/50">
                             {filteredMembers.map((member) => (
-                                <tr key={member.username} className="hover:bg-secondary/30 transition-colors">
+                                <tr 
+                                    key={member.username} 
+                                    onClick={() => setState(prev => ({ ...prev, selectedMemberId: member.username }))}
+                                    className="hover:bg-secondary/30 transition-colors cursor-pointer group"
+                                >
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 overflow-hidden text-xs font-semibold text-primary">
