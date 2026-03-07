@@ -24,7 +24,11 @@ export function useGitHubSettings(
       selectedOrg: org,
       installationId,
       installationStatus: 'installed',
-      accountType: finalAccountType
+      accountType: finalAccountType,
+      // Clear data to trigger fresh fetch via useEffect in GitHubContext
+      repos: [],
+      members: [],
+      alerts: []
     }));
 
     localStorage.setItem(
@@ -39,11 +43,7 @@ export function useGitHubSettings(
     );
 
     localStorage.removeItem(STORAGE_KEYS.CACHE);
-
-    fetchOrgData(true);
-    fetchMembers(true);
-    fetchSecurityAlerts(true);
-  }, [setState, fetchOrgData, fetchMembers, fetchSecurityAlerts]);
+  }, [setState]);
 
   const updateRankingWeights = useCallback((weights: RankingWeights) => {
     setState(prev => {

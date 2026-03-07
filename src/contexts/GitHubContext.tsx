@@ -165,18 +165,16 @@ export function GitHubAppProvider({ children }: { children: ReactNode }) {
   // Centralized data fetching trigger
   useEffect(() => {
     if (state.installed && state.selectedOrg && state.installationId && !isLoading) {
-      if (state.repos.length === 0) fetchOrgData();
-      if (state.members.length === 0) fetchMembers();
-      if (state.alerts.length === 0) fetchSecurityAlerts();
+      // Always fetch or check cache when org shifts
+      fetchOrgData();
+      fetchMembers();
+      fetchSecurityAlerts();
     }
   }, [
     state.installed, 
     state.selectedOrg, 
     state.installationId, 
-    state.repos.length, 
-    state.members.length, 
-    state.alerts.length, 
-    state.dateRange, // PR stats and alerts might need refresh on date change
+    state.dateRange, 
     isLoading,
     fetchOrgData, 
     fetchMembers, 

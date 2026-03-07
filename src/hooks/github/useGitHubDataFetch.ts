@@ -54,7 +54,7 @@ export function useGitHubDataFetch(
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { repos, timestamp, org } = JSON.parse(cached);
-        if (org === currentState.selectedOrg && repos && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && repos && repos.length > 0 && Date.now() - timestamp < CACHE_DURATION) {
           // If we have cached repos but the current state is empty, fill it
           if (currentState.repos.length === 0) {
             setState(prev => ({ ...prev, repos: repos }));
@@ -72,20 +72,22 @@ export function useGitHubDataFetch(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ installationId: currentState.installationId }),
       });
-      const { token, org, isOrg } = await tokenRes.json();
+      const { token, org, accountType: responseAccountType } = await tokenRes.json();
 
       if (org && org !== currentState.selectedOrg) {
-        setState(prev => ({ ...prev, selectedOrg: org }));
+        setState(prev => ({ ...prev, selectedOrg: org, accountType: responseAccountType || prev.accountType }));
       }
 
       const currentOrg = org || currentState.selectedOrg;
+      const finalAccountType = responseAccountType || currentState.accountType;
+      
+      console.log(`[DEBUG] fetchOrgData starting for ${currentOrg} (${finalAccountType})`);
 
       const query = `
         query($owner: String!) {
           repositoryOwner(login: $owner) {
-            ... on Organization {
-              createdAt
-            }
+            ... on Organization { createdAt }
+            ... on User { createdAt }
             repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}) {
               nodes {
                 name
@@ -99,17 +101,6 @@ export function useGitHubDataFetch(
                   nodes {
                     name
                     color
-                  }
-                }
-                vulnerabilityAlerts(first: 10, states: OPEN) {
-                  totalCount
-                  nodes {
-                    securityAdvisory {
-                      severity
-                      summary
-                      description
-                    }
-                    htmlUrl
                   }
                 }
                 defaultBranchRef {
@@ -148,7 +139,18 @@ export function useGitHubDataFetch(
       });
 
       const json = await res.json();
-      const nodes = json.data?.repositoryOwner?.repositories?.nodes || [];
+      console.log(`[DEBUG] fetchOrgData response for ${currentOrg}:`, { 
+        hasData: !!json.data, 
+        hasOwner: !!json.data?.repositoryOwner,
+        repoCount: json.data?.repositoryOwner?.repositories?.nodes?.length || 0,
+        errors: json.errors 
+      });
+      
+      if (json.errors) {
+        console.error("GraphQL errors fetching repos:", json.errors.map((e: any) => e.message).join(", "));
+      }
+
+      const nodes = (json.data?.repositoryOwner?.repositories?.nodes || []).filter((node: any) => node !== null);
 
       const repos = nodes.map((r: any) => {
         const commits = r.defaultBranchRef?.target?.history?.nodes || [];
@@ -164,11 +166,6 @@ export function useGitHubDataFetch(
         });
         const contributors = Array.from(contributorsMap.values());
         const languageNode = r.languages?.nodes?.[0];
-        const alertCount = r.vulnerabilityAlerts?.totalCount || 0;
-        const alertNodes = r.vulnerabilityAlerts?.nodes || [];
-        
-        const hasCritical = alertNodes.some((a: any) => a.securityAdvisory?.severity === "CRITICAL");
-        const hasHigh = alertNodes.some((a: any) => a.securityAdvisory?.severity === "HIGH");
 
         return {
           name: r.name,
@@ -180,22 +177,39 @@ export function useGitHubDataFetch(
           forks: r.forkCount,
           lastCommit: new Date(r.pushedAt).toLocaleDateString(),
           pushedAt: r.pushedAt,
-          status: hasCritical || hasHigh ? "critical" : alertCount > 0 ? "warning" : "healthy",
-          alerts: alertCount,
+          status: "healthy" as const,
+          alerts: 0,
           contributors: contributors,
           url: r.url
         };
       });
 
-      setState(prev => ({
-        ...prev,
-        repos,
-        selectedOrg: currentOrg,
-        orgCreatedAt: json.data?.repositoryOwner?.createdAt || prev.orgCreatedAt
-      }));
+      setState(prev => {
+        // Merge with existing alerts if we already have them
+        const mergedRepos = repos.map(repo => {
+          const repoAlerts = prev.alerts.filter(a => a.repo === repo.name);
+          if (repoAlerts.length > 0) {
+            const hasCritical = repoAlerts.some(a => a.severity === "critical");
+            const hasHigh = repoAlerts.some(a => a.severity === "high");
+            return {
+              ...repo,
+              alerts: repoAlerts.length,
+              status: (hasCritical || hasHigh) ? "critical" : "warning" as any
+            };
+          }
+          return repo;
+        });
+
+        return {
+          ...prev,
+          repos: mergedRepos,
+          selectedOrg: currentOrg,
+          orgCreatedAt: json.data?.repositoryOwner?.createdAt || prev.orgCreatedAt
+        };
+      });
 
       saveToCache({
-        repos,
+        repos, // We save base repos to cache, alerts will be updated by alerts fetcher
         orgCreatedAt: json.data?.repositoryOwner?.createdAt
       });
     } catch (err: any) {
@@ -213,7 +227,7 @@ export function useGitHubDataFetch(
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { members, timestamp, org } = JSON.parse(cached);
-        if (org === currentState.selectedOrg && members && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && members && members.length > 0 && Date.now() - timestamp < CACHE_DURATION) {
           // If we have cached members but the current state is empty, fill it
           if (currentState.members.length === 0) {
             setState(prev => ({ ...prev, members: members }));
@@ -393,7 +407,7 @@ export function useGitHubDataFetch(
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { alerts, timestamp, org } = JSON.parse(cached);
-        if (org === currentState.selectedOrg && alerts && Date.now() - timestamp < CACHE_DURATION) {
+        if (org === currentState.selectedOrg && alerts && alerts.length > 0 && Date.now() - timestamp < CACHE_DURATION) {
           // If we have cached alerts but the current state is empty, fill it
           if (currentState.alerts.length === 0) {
             setState(prev => ({ ...prev, alerts: alerts }));
@@ -406,33 +420,31 @@ export function useGitHubDataFetch(
     setLoadingStates(prev => ({ ...prev, fetchingAlerts: true }));
 
     try {
-      const tokenRes = await fetch("/api/github/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ installationId: currentState.installationId }),
-      });
-      const { token } = await tokenRes.json();
-
       const isOrg = currentState.accountType === 'Organization';
-      const baseApiUrl = isOrg ? `https://api.github.com/orgs/${currentState.selectedOrg}` : `https://api.github.com/user`;
+      const baseApiUrl = isOrg ? `/orgs/${currentState.selectedOrg}` : `/user`;
+
+      // Helper to fetch via proxy
+      const fetchViaProxy = async (endpoint: string) => {
+        const res = await fetch("/api/github/alerts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            installationId: currentState.installationId,
+            endpoint
+          }),
+        });
+        if (!res.ok) return [];
+        return await res.json();
+      };
 
       // 1. Fetch Dependabot alerts
-      const depRes = await fetch(`${baseApiUrl}/dependabot/alerts?state=open`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const depData = await depRes.json();
+      const depData = await fetchViaProxy(`${baseApiUrl}/dependabot/alerts?state=open`);
 
       // 2. Fetch Secret Scanning alerts
-      const secretRes = await fetch(`${baseApiUrl}/secret-scanning/alerts?state=open`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const secretData = await secretRes.json();
+      const secretData = await fetchViaProxy(`${baseApiUrl}/secret-scanning/alerts?state=open`);
 
       // 3. Fetch Code Scanning alerts
-      const codeRes = await fetch(`${baseApiUrl}/code-scanning/alerts?state=open`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const codeData = await codeRes.json();
+      const codeData = await fetchViaProxy(`${baseApiUrl}/code-scanning/alerts?state=open`);
 
       const alerts: SecurityAlert[] = [];
 
@@ -482,6 +494,11 @@ export function useGitHubDataFetch(
       }
 
       setState(prev => {
+        if (prev.repos.length === 0) {
+          saveToCache({ alerts });
+          return { ...prev, alerts };
+        }
+
         const updatedRepos = prev.repos.map(repo => {
           const repoAlerts = alerts.filter(a => a.repo === repo.name);
           const alertCount = repoAlerts.length;
