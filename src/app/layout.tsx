@@ -10,6 +10,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
     title: "GitWarden - Security & Productivity Dashboard",
     description: "Monitor your GitHub organization security and productivity",
+    icons: {
+        icon: '/icon.png',
+        shortcut: '/icon.png',
+        apple: '/icon.png',
+    },
 };
 
 export default function RootLayout({
