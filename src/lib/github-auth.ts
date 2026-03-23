@@ -1,7 +1,7 @@
 import { AppInstallationState } from "@/types";
 
 // GitHub App Configuration (Public values only)
-const GITHUB_APP_NAME = 'git-warden';
+const GITHUB_APP_NAME = 'aperio';
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || 'Iv23liKXLDw16D4n0bmQ';
 
 const INSTALLATION_STORAGE_KEY = 'github_app_installation';

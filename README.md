@@ -1,79 +1,73 @@
-# GitGuard
+# Aperio
 
-> **Stop managing your GitHub organization in the dark.**
+> **Complete visibility for the modern engineering organization.**
 
-GitGuard is a stateless, real-time command center designed for organization owners and maintainers who need clarity, security, and fairness.
+**Aperio** is a high-altitude, stateless command center designed for GitHub organization owners and engineering leads. It transforms complex repository data into actionable insights—providing clarity on security, tech stack distribution, and team engagement in a single, unified interface.
 
-![GitGuard Dashboard](./public/dashboard.jpeg)
+![Aperio Dashboard](./public/dashboard.jpeg)
 
-## Why GitGuard?
+## Why Aperio?
 
-Most GitHub Orgs are a black box. You have security in one tab, activity in another, and zero clear visibility into who is actually moving the needle.
+Managing a growing GitHub organization often feels like navigating a black box. Security alerts, contributor activity, and repository health are typically scattered across dozens of individual tabs. 
 
-We built **GitGuard** to fix that.
+**Aperio** centralizes this data into a "Single Source of Truth," allowing leadership to monitor organization-wide health without the administrative overhead.
 
-### Real-time Security
+### Unified Security Oversight
+Stop chasing alerts. Aperio provides live, aggregated scanning of **Dependabot**, **Secret Scanning**, and **Code Scanning** across your entire ecosystem. Identify critical vulnerabilities in seconds, not hours.
 
-Live scanning of **Dependabot**, **Secret Scanning**, and **Code Scanning** alerts in a single view. Know your vulnerability exposure instantly.
+### Meaningful Engagement Metrics
+We’ve moved beyond "raw commit" counts. Aperio utilizes a sophisticated engagement algorithm that prioritizes **Pull Requests** and **Code Reviews**—the high-value behaviors that actually build healthy, collaborative teams.
 
-### Fair Ranking
-
-We’re fixing the "raw commit" trap. GitGuard ranks contributors fairly by weighing **Pull Requests** and **Code Reviews** heavily in its algorithm—rewarding the behavior that actually builds healthy teams.
-
-### Privacy-First & Stateless
-
-No database. No stored tokens. GitGuard runs entirely in your browser session (client-side) using a secure proxy for token exchange. Your data never leaves your session.
+### Privacy-First Architecture
+Security is at our core. Aperio is **100% stateless**. We do not use a database and we never store your tokens. The application runs entirely within your browser session, ensuring your organization's sensitive data never leaves your control.
 
 ---
 
-## Key Features
+## Key Capabilities
 
-- **High-Altitude View**: Filter 50+ repositories by health status in seconds.
-- **Interactive Contributors**: Hover over contributor avatars to see who is active in which repo.
-- **Language Distribution**: visualize your organization's tech stack with real-time charts.
-- **Member Velocity**: Identify inactive members and rising stars.
+* **Organizational Health Filter**: Instantly sort and filter 50+ repositories by real-time status and risk level.
+* **Dynamic Tech Stack Analysis**: Visualize your organization's language distribution and technical evolution with real-time charts.
+* **Contributor Connectivity**: Interactive mapping that shows which members are driving impact in specific repositories.
+* **Resource Management**: Identify active contributors and dormant projects to better allocate engineering resources.
 
-## Tech Stack
+## Technical Architecture
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Directory)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS & `shadcn/ui`
-- **Data**: GitHub GraphQL API
+* **Core Framework**: [Next.js](https://nextjs.org/) (App Router)
+* **Language**: TypeScript
+* **Interface**: Tailwind CSS & `shadcn/ui`
+* **Data Layer**: GitHub GraphQL API for high-performance, precise data fetching.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- A GitHub App (for token exchange)
+* Node.js 18+
+* A GitHub App (for secure token exchange)
 
 ### Installation
 
-1. **Clone the repository**:
+1.  **Clone the repository**:
+    ```bash
+    git clone [https://github.com/Goal651/aperio.git](https://github.com/Goal651/aperio.git)
+    cd aperio
+    ```
 
-   ```bash
-   git clone https://github.com/goal651/git-warden.git
-   cd git-warden
-   ```
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-2. **Install dependencies**:
+3.  **Launch the Dashboard**:
+    ```bash
+    npm run dev
+    ```
 
-   ```bash
-   npm install
-   ```
-
-3. **Run the development server**:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) to scan your org!
+4.  Navigate to `http://localhost:3000` to begin your organization audit.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+We welcome contributions from the community! Please review our [CONTRIBUTING.md](CONTRIBUTING.md) for architectural guidelines and our pull request process.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
