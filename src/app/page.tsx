@@ -75,7 +75,7 @@ export default function Page() {
                 <div className="flex items-center gap-3">
                     {/* Date Range Selector */}
                     <DateRangeSelector onDateRangeChange={updateDateRange} orgCreatedAt={state.orgCreatedAt} />
-                    
+
                     <Button
                         variant="glow" className="gap-2 bg-black shadow text-white hover:bg-black/90" onClick={() => {
                             fetchOrgData(true);
@@ -84,7 +84,7 @@ export default function Page() {
                         }}>
                         <RefreshCw className={`h-4 w-4
                          ${isRefreshing
-                                && "animate-spin"}`}
+                            && "animate-spin"}`}
                         />
                         Run Scan
                     </Button>

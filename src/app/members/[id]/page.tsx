@@ -8,7 +8,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Member } from "@/types";
 
-export function MemberDetailView() {
+export default function MemberDetailView() {
     const params = useParams();
     const { state, setState } = useGitHubApp();
     const [member, setMember] = useState<Member | null>(null);

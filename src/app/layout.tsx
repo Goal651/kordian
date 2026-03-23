@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Aperio - Security & Productivity Dashboard",
+    title: "kordian - Security & Productivity Dashboard",
     description: "Monitor your GitHub organization security and productivity",
     icons: {
         icon: '/icon.png',

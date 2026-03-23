@@ -1,25 +1,25 @@
-# Aperio
+# kordian
 
 > **Complete visibility for the modern engineering organization.**
 
-**Aperio** is a high-altitude, stateless command center designed for GitHub organization owners and engineering leads. It transforms complex repository data into actionable insights—providing clarity on security, tech stack distribution, and team engagement in a single, unified interface.
+**kordian** is a high-altitude, stateless command center designed for GitHub organization owners and engineering leads. It transforms complex repository data into actionable insights—providing clarity on security, tech stack distribution, and team engagement in a single, unified interface.
 
-![Aperio Dashboard](./public/dashboard.jpeg)
+![kordian Dashboard](./public/dashboard.jpeg)
 
-## Why Aperio?
+## Why kordian?
 
 Managing a growing GitHub organization often feels like navigating a black box. Security alerts, contributor activity, and repository health are typically scattered across dozens of individual tabs. 
 
-**Aperio** centralizes this data into a "Single Source of Truth," allowing leadership to monitor organization-wide health without the administrative overhead.
+**kordian** centralizes this data into a "Single Source of Truth," allowing leadership to monitor organization-wide health without the administrative overhead.
 
 ### Unified Security Oversight
-Stop chasing alerts. Aperio provides live, aggregated scanning of **Dependabot**, **Secret Scanning**, and **Code Scanning** across your entire ecosystem. Identify critical vulnerabilities in seconds, not hours.
+Stop chasing alerts. kordian provides live, aggregated scanning of **Dependabot**, **Secret Scanning**, and **Code Scanning** across your entire ecosystem. Identify critical vulnerabilities in seconds, not hours.
 
 ### Meaningful Engagement Metrics
-We’ve moved beyond "raw commit" counts. Aperio utilizes a sophisticated engagement algorithm that prioritizes **Pull Requests** and **Code Reviews**—the high-value behaviors that actually build healthy, collaborative teams.
+We’ve moved beyond "raw commit" counts. kordian utilizes a sophisticated engagement algorithm that prioritizes **Pull Requests** and **Code Reviews**—the high-value behaviors that actually build healthy, collaborative teams.
 
 ### Privacy-First Architecture
-Security is at our core. Aperio is **100% stateless**. We do not use a database and we never store your tokens. The application runs entirely within your browser session, ensuring your organization's sensitive data never leaves your control.
+Security is at our core. kordian is **100% stateless**. We do not use a database and we never store your tokens. The application runs entirely within your browser session, ensuring your organization's sensitive data never leaves your control.
 
 ---
 
@@ -48,8 +48,8 @@ Security is at our core. Aperio is **100% stateless**. We do not use a database 
 
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/Goal651/aperio.git](https://github.com/Goal651/aperio.git)
-    cd aperio
+    git clone [https://github.com/Goal651/kordian.git](https://github.com/Goal651/kordian.git)
+    cd kordian
     ```
 
 2.  **Install dependencies**:

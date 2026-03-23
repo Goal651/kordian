@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Repository, SecurityAlert } from "@/types";
 
 
-export function RepoDetailView() {
+export default function RepoDetailView() {
     const params = useParams();
     const { state, setState } = useGitHubApp();
     const [repo, setRepo] = useState<Repository | null>(null);
