@@ -4,7 +4,7 @@
 
 **kordian** is a high-altitude, stateless command center designed for GitHub organization owners and engineering leads. It transforms complex repository data into actionable insights—providing clarity on security, tech stack distribution, and team engagement in a single, unified interface.
 
-![kordian Dashboard](./public/dashboard.jpeg)
+![kordian Dashboard](./public/dashboard.png)
 
 ## Why kordian?
 
