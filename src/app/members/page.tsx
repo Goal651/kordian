@@ -13,34 +13,33 @@ import {
     ResponsiveContainer,
 } from "recharts";
 
-import { useGitHubApp} from "@/hooks/useGitHubAuth";
+import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { Member } from "@/types";
-import { MemberDetailView } from "@/components/dashboard/MemberDetailView";
 
 // Custom tooltip with better styling
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="glass-card px-4 py-3 shadow-lg border border-border/50">
-        <p className="font-medium text-foreground">{label}</p>
-        <p className="flex flex-col font-mono text-sm text-foreground">
-          {payload[0].value} {payload[0].value === 1 ? 'repository' : 'repositories'}
-        </p>
-        <p className="flex flex-col font-mono text-sm text-foreground/80">
-          {payload[1].value} {payload[1].value === 1 ? 'pull request' : 'pull requests'}
-        </p>
-        <p className="flex flex-col font-mono text-sm text-foreground/80">
-          {payload[2].value} {payload[2].value === 1 ? 'review' : 'reviews'}
-        </p>
-      </div>
-    );
-  }
-  return null;
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card px-4 py-3 shadow-lg border border-border/50">
+                <p className="font-medium text-foreground">{label}</p>
+                <p className="flex flex-col font-mono text-sm text-foreground">
+                    {payload[0].value} {payload[0].value === 1 ? 'repository' : 'repositories'}
+                </p>
+                <p className="flex flex-col font-mono text-sm text-foreground/80">
+                    {payload[1].value} {payload[1].value === 1 ? 'pull request' : 'pull requests'}
+                </p>
+                <p className="flex flex-col font-mono text-sm text-foreground/80">
+                    {payload[2].value} {payload[2].value === 1 ? 'review' : 'reviews'}
+                </p>
+            </div>
+        );
+    }
+    return null;
 };
 
 export default function Page() {
@@ -66,13 +65,6 @@ export default function Page() {
         m.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    if (state.selectedMemberId) {
-        return (
-            <DashboardLayout>
-                <MemberDetailView />
-            </DashboardLayout>
-        );
-    }
 
     const chartData = members.slice(0, 5).map((m: Member) => ({
         name: m.username,
@@ -187,8 +179,8 @@ export default function Page() {
                         </thead>
                         <tbody className="divide-y divide-border/50">
                             {filteredMembers.map((member) => (
-                                <tr 
-                                    key={member.username} 
+                                <tr
+                                    key={member.username}
                                     onClick={() => router.push(`/members/${member.username}`)}
                                     className="hover:bg-secondary/30 transition-colors cursor-pointer group"
                                 >

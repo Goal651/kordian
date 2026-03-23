@@ -31,7 +31,6 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { RepoDetailView } from "@/components/dashboard/RepoDetailView";
 
 export default function Page() {
     const { state, setState, fetchOrgData, isLoading } = useGitHubApp();
@@ -56,14 +55,6 @@ export default function Page() {
         const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesStatus && matchesSearch;
     });
-
-    if (state.selectedRepoName) {
-        return (
-            <DashboardLayout>
-                <RepoDetailView />
-            </DashboardLayout>
-        );
-    }
 
     return (
         <DashboardLayout>
