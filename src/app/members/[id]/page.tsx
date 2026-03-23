@@ -2,12 +2,23 @@
 
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, GitCommit, GitPullRequest, Eye, ExternalLink, Shield } from "lucide-react";
+import { ArrowLeft, GitCommit, GitPullRequest, Eye, Shield } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Member } from "@/types";
 
 export function MemberDetailView() {
+    const params = useParams();
     const { state, setState } = useGitHubApp();
-    const member = state.members.find(m => m.username === state.selectedMemberId);
+    const [member, setMember] = useState<Member | null>(null);
+
+    useEffect(() => {
+        const member = state.members.find(m => m.username === params.id);
+        if (member) {
+            setMember(member);
+        }
+    }, [params]);
 
     if (!member) return null;
 

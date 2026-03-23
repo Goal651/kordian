@@ -189,7 +189,7 @@ export default function Page() {
                             {filteredMembers.map((member) => (
                                 <tr 
                                     key={member.username} 
-                                    onClick={() => setState(prev => ({ ...prev, selectedMemberId: member.username }))}
+                                    onClick={() => router.push(`/members/${member.username}`)}
                                     className="hover:bg-secondary/30 transition-colors cursor-pointer group"
                                 >
                                     <td className="py-4">
