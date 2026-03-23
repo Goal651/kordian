@@ -4,7 +4,7 @@ import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, AlertTriangle, ExternalLink, Users, Clock } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Repository, SecurityAlert } from "@/types";
 
@@ -14,6 +14,7 @@ export default function RepoDetailView() {
     const { state, setState } = useGitHubApp();
     const [repo, setRepo] = useState<Repository | null>(null);
     const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+    const router = useRouter()
 
     useEffect(() => {
         const repo = state.repos.find(r => r.name === params.name);
@@ -25,7 +26,7 @@ export default function RepoDetailView() {
 
     if (!repo) return null;
 
-    const backToDashboard = () => setState(prev => ({ ...prev, selectedRepoName: null }));
+    const backToDashboard =()=> router.back()
 
     return (
         <div className="animate-fade-in">
