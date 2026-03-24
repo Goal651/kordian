@@ -11,8 +11,8 @@ The following is a set of guidelines for contributing to GitGuard. These are mos
 2. **Clone your fork** locally:
 
     ```bash
-    git clone https://github.com/your-username/git-guard.git
-    cd git-guard
+    git clone https://github.com/your-username/kordian.git
+    cd kordian
     ```
 
 3. **Create a branch** for your feature or bugfix:
