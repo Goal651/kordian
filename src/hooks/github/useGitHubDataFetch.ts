@@ -110,7 +110,11 @@ export function useGitHubDataFetch(
                   forkCount
                   pushedAt
                   url
-                  languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+                  watchers { totalCount }
+                  issues(states: OPEN) { totalCount }
+                  pullRequests(states: OPEN) { totalCount }
+                  licenseInfo { name }
+                  languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
                     nodes {
                       name
                       color
@@ -148,7 +152,11 @@ export function useGitHubDataFetch(
                   forkCount
                   pushedAt
                   url
-                  languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+                  watchers { totalCount }
+                  issues(states: OPEN) { totalCount }
+                  pullRequests(states: OPEN) { totalCount }
+                  licenseInfo { name }
+                  languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
                     nodes {
                       name
                       color
@@ -223,7 +231,9 @@ export function useGitHubDataFetch(
           }
         });
         const contributors = Array.from(contributorsMap.values());
-        const languageNode = r.languages?.nodes?.[0];
+        const languagesNodes = r.languages?.nodes || [];
+        const languageNode = languagesNodes[0];
+        const allLanguages = languagesNodes.map((l: any) => l.name);
 
         return {
           name: r.name,
@@ -238,7 +248,12 @@ export function useGitHubDataFetch(
           status: "healthy" as const,
           alerts: 0,
           contributors: contributors,
-          url: r.url
+          url: r.url,
+          allLanguages: allLanguages,
+          watchers: r.watchers?.totalCount || 0,
+          openIssues: r.issues?.totalCount || 0,
+          openPRs: r.pullRequests?.totalCount || 0,
+          license: r.licenseInfo?.name || "No License"
         };
       });
 

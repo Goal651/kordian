@@ -47,6 +47,7 @@ export default function Page() {
     const router = useRouter();
 
     const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<"commits" | "prs" | "reviews" | "name">("prs");
 
     useEffect(() => {
         if (!isLoading && !state.installed) {
@@ -63,7 +64,12 @@ export default function Page() {
     const filteredMembers = members.filter(m =>
         m.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ).sort((a, b) => {
+        if (sortBy === "commits") return b.commits - a.commits;
+        if (sortBy === "prs") return b.prs - a.prs;
+        if (sortBy === "reviews") return b.reviews - a.reviews;
+        return a.name.localeCompare(b.name);
+    });
 
 
     const chartData = members.slice(0, 5).map((m: Member) => ({
@@ -149,14 +155,26 @@ export default function Page() {
             <div className="glass-card p-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="font-semibold text-foreground">All Members</h2>
-                    <div className="relative w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search members..."
-                            className="pl-10"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                    <div className="flex items-center gap-4">
+                        <select 
+                            className="bg-secondary/50 border border-border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary h-10"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                        >
+                            <option value="prs">Most PRs</option>
+                            <option value="commits">Most Commits</option>
+                            <option value="reviews">Most Reviews</option>
+                            <option value="name">Alphabetical</option>
+                        </select>
+                        <div className="relative w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search members..."
+                                className="pl-10"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 

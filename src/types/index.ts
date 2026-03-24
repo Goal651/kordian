@@ -18,6 +18,11 @@ export interface Repository {
   contributors: Contributor[];
   url?: string;
   pushedAt: string;
+  allLanguages?: string[];
+  watchers?: number;
+  openIssues?: number;
+  openPRs?: number;
+  license?: string;
 }
 
 export interface Member {

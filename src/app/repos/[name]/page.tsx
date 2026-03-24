@@ -2,7 +2,7 @@
 
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, AlertTriangle, ExternalLink, Users, Clock } from "lucide-react";
+import { ArrowLeft, Shield, AlertTriangle, ExternalLink, Users, Clock, Eye, GitPullRequest, Info } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -22,7 +22,7 @@ export default function RepoDetailView() {
             setRepo(repo);
             setAlerts(state.alerts.filter(a => a.repo === params.name));
         }
-    }, [params]);
+    }, [params, state.repos, state.alerts]);
 
     if (!repo) return null;
 
@@ -41,6 +41,11 @@ export default function RepoDetailView() {
                             }`}>
                             {repo.visibility}
                         </span>
+                        {repo.license && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-secondary text-muted-foreground">
+                                {repo.license}
+                            </span>
+                        )}
                     </div>
                     <p className="text-muted-foreground mt-1 line-clamp-1">{repo.description}</p>
                 </div>
@@ -52,11 +57,13 @@ export default function RepoDetailView() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
                 <StatCard title="Health Status" value={repo.status.toUpperCase()} icon={Shield} loading={false} />
                 <StatCard title="Security Alerts" value={repo.alerts.toString()} icon={AlertTriangle} loading={false} />
                 <StatCard title="Contributors" value={repo.contributors.length.toString()} icon={Users} loading={false} />
-                <StatCard title="Last Push" value={repo.lastCommit} icon={Clock} loading={false} />
+                <StatCard title="Watchers" value={(repo.watchers || 0).toString()} icon={Eye} loading={false} />
+                <StatCard title="Open PRs" value={(repo.openPRs || 0).toString()} icon={GitPullRequest} loading={false} />
+                <StatCard title="Issues" value={(repo.openIssues || 0).toString()} icon={Info} loading={false} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -118,10 +125,24 @@ export default function RepoDetailView() {
                     </div>
 
                     <div className="glass-card p-6">
-                        <h2 className="text-lg font-semibold mb-2">Primary Language</h2>
-                        <div className="flex items-center gap-3">
-                            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: repo.languageColor }} />
-                            <span className="font-medium">{repo.language}</span>
+                        <h2 className="text-lg font-semibold mb-3">Languages</h2>
+                        <div className="space-y-3">
+                            {repo.allLanguages && repo.allLanguages.length > 0 ? (
+                                repo.allLanguages.map((lang, i) => (
+                                    <div key={lang} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: i === 0 ? repo.languageColor : '#555' }} />
+                                            <span className="text-sm text-foreground/80">{lang}</span>
+                                        </div>
+                                        {i === 0 && <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded uppercase">Primary</span>}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: repo.languageColor }} />
+                                    <span className="font-medium">{repo.language}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

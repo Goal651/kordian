@@ -37,6 +37,8 @@ export default function Page() {
     const router = useRouter();
     const [filter, setFilter] = useState<"all" | "healthy" | "warning" | "critical">("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<"pushed" | "stars" | "forks" | "name">("pushed");
+    const [languageFilter, setLanguageFilter] = useState<string>("all");
 
     useEffect(() => {
         if (!isLoading && !state.installed) {
@@ -49,11 +51,20 @@ export default function Page() {
 
     // Filter repos if fetched
     const repositories = state.repos || [];
+    
+    // Get unique languages for filter
+    const languages = Array.from(new Set(repositories.map(r => r.language))).sort();
 
     const filteredRepos = repositories.filter(repo => {
         const matchesStatus = filter === "all" ? true : repo.status === filter;
         const matchesSearch = repo.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesStatus && matchesSearch;
+        const matchesLanguage = languageFilter === "all" ? true : repo.language === languageFilter;
+        return matchesStatus && matchesSearch && matchesLanguage;
+    }).sort((a, b) => {
+        if (sortBy === "stars") return b.stars - a.stars;
+        if (sortBy === "forks") return b.forks - a.forks;
+        if (sortBy === "pushed") return new Date(b.pushedAt).getTime() - new Date(a.pushedAt).getTime();
+        return a.name.localeCompare(b.name);
     });
 
     return (
@@ -70,18 +81,42 @@ export default function Page() {
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-4 mb-6 animate-fade-in">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search repositories..."
-                        className="pl-10"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+            <div className="space-y-4 mb-6 animate-fade-in">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                    <div className="relative flex-1 max-w-md w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search repositories..."
+                            className="pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <select 
+                            className="bg-secondary/50 border border-border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+                            value={languageFilter}
+                            onChange={(e) => setLanguageFilter(e.target.value)}
+                        >
+                            <option value="all">All Languages</option>
+                            {languages.map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                        </select>
+                        <select 
+                            className="bg-secondary/50 border border-border rounded-md px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-primary"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                        >
+                            <option value="pushed">Recently Pushed</option>
+                            <option value="stars">Most Stars</option>
+                            <option value="forks">Most Forks</option>
+                            <option value="name">Alphabetical</option>
+                        </select>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant={filter === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("all")}>All</Button>
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-border/50">
+                    <Button variant={filter === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("all")}>All Status</Button>
                     <Button variant={filter === "healthy" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("healthy")}>Healthy</Button>
                     <Button variant={filter === "warning" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("warning")}>Warnings</Button>
                     <Button variant={filter === "critical" ? "secondary" : "ghost"} size="sm" onClick={() => setFilter("critical")}>Critical</Button>
