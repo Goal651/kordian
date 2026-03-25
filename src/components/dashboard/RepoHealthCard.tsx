@@ -1,6 +1,7 @@
-import { CheckCircle2, XCircle, AlertCircle, AlertTriangle, Lock, Unlock, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Lock, Unlock } from "lucide-react";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const StatusIcon = ({ status }: { status: string }) => {
   if (status === "healthy")
@@ -61,14 +62,16 @@ export function RepoHealthCard({ loading = false }: { loading?: boolean }) {
           </thead>
           <tbody className="divide-y divide-border/50">
             {loading ? (
-              <tr>
-                <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading repositories...</span>
-                  </div>
-                </td>
-              </tr>
+              <>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td className="py-3"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-3 flex justify-center"><Skeleton className="h-4 w-4 rounded-full" /></td>
+                    <td className="py-3 text-center"><Skeleton className="h-4 w-6 mx-auto" /></td>
+                    <td className="py-3 text-right"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                  </tr>
+                ))}
+              </>
             ) : !hasIssues ? (
               <tr>
                 <td colSpan={4} className="py-8 text-center text-muted-foreground">

@@ -10,7 +10,7 @@ import {
   LabelList
 } from "recharts";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = [
   "hsl(190, 95%, 50%)", // cyan
@@ -57,17 +57,22 @@ export function ActivityChart({ loading = false }: { loading?: boolean }) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 7);
 
-  // If loading, show loading state
+  // If loading, show skeleton loading state
   if (loading) {
+    const skeletonWidths = ["w-[80%]", "w-[65%]", "w-[55%]", "w-[45%]", "w-[38%]", "w-[28%]", "w-[20%]"];
     return (
       <div className="glass-card p-6 animate-fade-in">
         <div className="mb-6">
           <h3 className="font-semibold text-foreground">Language Distribution</h3>
-          <p className="text-sm text-muted-foreground">Primary languages across repositories</p>
+          <Skeleton className="h-4 w-48 mt-1" />
         </div>
-        <div className="h-64 flex flex-col items-center justify-center gap-4 text-muted-foreground">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p>Fetching language data...</p>
+        <div className="h-64 flex flex-col justify-center gap-4 px-4">
+          {skeletonWidths.map((w, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-3 w-16 shrink-0" />
+              <Skeleton className={`h-5 ${w} rounded-r-md`} />
+            </div>
+          ))}
         </div>
       </div>
     );

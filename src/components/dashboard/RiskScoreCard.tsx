@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield } from "lucide-react";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 
@@ -41,48 +42,55 @@ export function RiskScoreCard({ loading = false }: { loading?: boolean }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-center">
-        <div className="relative h-44 w-44">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={75}
-                startAngle={90}
-                endAngle={-270}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {data.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            {loading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            ) : (
-              <>
-                <span className={`text-4xl font-bold ${getScoreColor()}`}>{score}</span>
-                <span className="text-xs text-muted-foreground">{getScoreLabel()}</span>
-              </>
-            )}
+      {loading ? (
+        <div className="flex flex-col items-center gap-4">
+          {/* Skeleton donut ring */}
+          <div className="relative h-44 w-44 flex items-center justify-center">
+            <div className="h-44 w-44 rounded-full border-[20px] border-muted animate-pulse" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-3 w-16" />
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-center">
+          <div className="relative h-44 w-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={75}
+                  startAngle={90}
+                  endAngle={-270}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {data.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className={`text-4xl font-bold ${getScoreColor()}`}>{score}</span>
+              <span className="text-xs text-muted-foreground">{getScoreLabel()}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 pt-4 border-t border-border space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Vulnerabilities Fixed</span>
-          <span className="font-mono text-success">{score}%</span>
+          {loading ? <Skeleton className="h-4 w-10" /> : <span className="font-mono text-success">{score}%</span>}
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Policies Enforced</span>
-          <span className="font-mono text-foreground">{12}/{15}</span>
+          {loading ? <Skeleton className="h-4 w-10" /> : <span className="font-mono text-foreground">{12}/{15}</span>}
         </div>
       </div>
     </div>

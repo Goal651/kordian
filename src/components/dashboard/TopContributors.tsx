@@ -1,5 +1,5 @@
-import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
-
+import { TrendingUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
 export function TopContributors({ loading }: { loading: boolean }) {
@@ -17,7 +17,20 @@ export function TopContributors({ loading }: { loading: boolean }) {
 
       <div className="space-y-3">
         {loading ? (
-          <Loader2 className="h-8 w-8 text-white animate-spin" />
+          <>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-6" />
+              </div>
+            ))}
+          </>
         ) : members.length === 0 ? (
           <p className="text-sm text-muted-foreground italic">No data available</p>
         ) : (

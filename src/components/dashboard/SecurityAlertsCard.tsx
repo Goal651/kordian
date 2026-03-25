@@ -1,5 +1,5 @@
-import { AlertTriangle, Bug, Key, Loader2, Package } from "lucide-react";
-
+import { AlertTriangle, Bug, Key, Package } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
 
 export function SecurityAlertsCard({ loading }: { loading: boolean }) {
@@ -57,7 +57,19 @@ export function SecurityAlertsCard({ loading }: { loading: boolean }) {
       </div>
 
       <div className="space-y-4">
-        { loading ? <Loader2 className="w-8 h-8 animate-spin" /> : alertsDisplay.map((alert) => (
+        {loading ? (
+          <>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg bg-secondary/50 p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+            ))}
+          </>
+        ) : alertsDisplay.map((alert) => (
           <div
             key={alert.type}
             className="flex items-center justify-between rounded-lg bg-secondary/50 p-4"
