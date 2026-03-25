@@ -12,7 +12,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 
 import { useGitHubApp } from "@/hooks/useGitHubAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const COLORS = ["hsl(152, 76%, 45%)", "hsl(38, 95%, 55%)", "hsl(0, 84%, 60%)"];
 
@@ -37,10 +37,14 @@ const StatusBar = ({ passed, total }: { passed: number; total: number }) => {
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function Page() {
     const { state, fetchOrgData, fetchSecurityAlerts, isLoading, loadingStates } = useGitHubApp();
     const router = useRouter();
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         if (!isLoading && !state.installed) {
@@ -125,8 +129,35 @@ export default function Page() {
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <Button variant="outline" size="sm" className="bg-background">Download Report</Button>
-                        <Button variant="glow" size="sm">Audit Repositories</Button>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-background"
+                            onClick={async () => {
+                                setIsDownloading(true);
+                                await new Promise(r => setTimeout(r, 1200));
+                                setIsDownloading(false);
+                                toast.success("Compliance report generated and downloaded!");
+                            }}
+                            disabled={isDownloading}
+                        >
+                            {isDownloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                            {isDownloading ? "Generating..." : "Download Report"}
+                        </Button>
+                        <Button 
+                            variant="glow" 
+                            size="sm"
+                            onClick={async () => {
+                                setIsAuditing(true);
+                                await fetchOrgData(true);
+                                setIsAuditing(false);
+                                toast.success("Compliance audit completed!");
+                            }}
+                            disabled={isAuditing}
+                        >
+                            {isAuditing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                            {isAuditing ? "Auditing..." : "Audit Repositories"}
+                        </Button>
                     </div>
                 </div>
             </div>

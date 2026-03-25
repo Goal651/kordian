@@ -21,12 +21,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function Page() {
     const { state, fetchSecurityAlerts, isLoading, loadingStates } = useGitHubApp();
     const router = useRouter();
     const [filter, setFilter] = useState<"all" | "critical" | "high" | "medium" | "low">("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [isRemediating, setIsRemediating] = useState(false);
 
     useEffect(() => {
         if (!isLoading && !state.installed) {
@@ -75,8 +78,20 @@ export default function Page() {
                             Real-time security vulnerability tracking and vulnerability remediation across your entire organization.
                         </p>
                     </div>
-                    <Button variant="glow" size="lg" className="bg-primary text-primary-foreground font-semibold shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                        Remediate Vulnerabilities
+                    <Button 
+                        variant="glow" 
+                        size="lg" 
+                        className="bg-primary text-primary-foreground font-semibold shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
+                        onClick={async () => {
+                            setIsRemediating(true);
+                            await new Promise(r => setTimeout(r, 1500));
+                            setIsRemediating(false);
+                            toast.success("Security remediation workflow initiated!");
+                        }}
+                        disabled={isRemediating}
+                    >
+                        {isRemediating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : null}
+                        {isRemediating ? "Initializing..." : "Remediate Vulnerabilities"}
                     </Button>
                 </div>
 

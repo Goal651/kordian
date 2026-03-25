@@ -98,7 +98,7 @@ export function OrganizationSelector() {
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:bg-muted/50'
                   }`}
-                onClick={() => switchInstallation(installation.installationId)}
+                onClick={() => handleSwitchInstallation(installation.installationId)}
               >
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-8 w-8">

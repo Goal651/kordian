@@ -26,6 +26,8 @@ import { toast } from "sonner";
 export default function Page() {
     const { state, setState, updateRankingWeights, fetchMembers, disconnect, isLoading } = useGitHubApp();
     const [weights, setWeights] = useState(state.rankingWeights || { prs: 20, reviews: 15, commits: 2 });
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDisconnecting, setIsDisconnecting] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -37,10 +39,26 @@ export default function Page() {
     if (isLoading) return <LoadingScreen />;
     if (!state.installed) return null;
 
-    const handleSaveWeights = () => {
-        updateRankingWeights(weights);
-        fetchMembers();
-        toast.success("Ranking algorithm updated successfully!");
+    const handleSaveWeights = async () => {
+        setIsSaving(true);
+        try {
+            updateRankingWeights(weights);
+            await fetchMembers();
+            toast.success("Ranking algorithm updated successfully!");
+        } catch (e) {
+            toast.error("Failed to update ranking.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDisconnect = async () => {
+        setIsDisconnecting(true);
+        try {
+            await disconnect();
+        } finally {
+            setIsDisconnecting(false);
+        }
     };
 
     return (
@@ -122,10 +140,20 @@ export default function Page() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <Button onClick={handleSaveWeights} className="gap-2 bg-background text-foreground hover:bg-background/80">
-                                    Apply Weights
+                                <Button 
+                                    onClick={handleSaveWeights} 
+                                    className="gap-2 bg-background text-foreground hover:bg-background/80"
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+                                    {isSaving ? "Applying..." : "Apply Weights"}
                                 </Button>
-                                <Button variant="secondary" className="gap-2 bg-background text-foreground hover:bg-background/80" onClick={() => setWeights({ prs: 20, reviews: 15, commits: 2 })}>
+                                <Button 
+                                    variant="secondary" 
+                                    className="gap-2 bg-background text-foreground hover:bg-background/80" 
+                                    onClick={() => setWeights({ prs: 20, reviews: 15, commits: 2 })}
+                                    disabled={isSaving}
+                                >
                                     Reset to Defaults
                                 </Button>
                             </div>
@@ -164,8 +192,14 @@ export default function Page() {
                                     <p className="text-sm font-medium text-foreground">App Connection</p>
                                     <p className="text-xs text-muted-foreground">The GitHub App has access to 50+ members and security endpoints.</p>
                                 </div>
-                                <Button variant="destructive" className="gap-2" onClick={() => disconnect()}>
-                                    <LogOut className="h-4 w-4" /> Disconnect App
+                                <Button 
+                                    variant="destructive" 
+                                    className="gap-2" 
+                                    onClick={handleDisconnect}
+                                    disabled={isDisconnecting}
+                                >
+                                    {isDisconnecting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                                    {isDisconnecting ? "Disconnecting..." : "Disconnect App"}
                                 </Button>
                             </div>
                         </CardContent>
