@@ -14,7 +14,8 @@ import {
     Lock,
     Zap,
     ChevronRight,
-    Search
+    Search,
+    FileText
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -137,7 +138,7 @@ export default function Page() {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 md:flex-none h-12 px-6 gap-2 bg-secondary/10 border-border/40 hover:bg-secondary/20 rounded-2xl transition-all"
+                        className="flex-1 md:flex-none h-12 px-6 gap-2 bg-secondary/10 border-border/40 hover:bg-secondary/20 rounded-2xl transition-all group text-muted-foreground hover:text-primary"
                         onClick={async () => {
                             setIsDownloading(true);
                             await new Promise(r => setTimeout(r, 1200));
@@ -146,8 +147,8 @@ export default function Page() {
                         }}
                         disabled={isDownloading}
                     >
-                        {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                        <span className="font-black uppercase  text-[10px]">Export PDF</span>
+                        {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 transition-transform group-hover:scale-110" />}
+                        <span className="font-black uppercase  text-[10px]">Generate Compliance Report</span>
                     </Button>
                     <Button
                         variant="glow"

@@ -12,7 +12,8 @@ import {
     Clock,
     Search,
     Filter,
-    CheckCircle
+    CheckCircle,
+    ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,21 +83,35 @@ export default function Page() {
                             Real-time security vulnerability tracking and automated remediation across your entire organization's codebase.
                         </p>
                     </div>
-                    <Button
-                        variant="glow"
-                        size="lg"
-                        className="w-full lg:w-auto bg-primary text-primary-foreground font-bold shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all h-12 md:h-14 px-8 text-base"
-                        onClick={async () => {
-                            setIsRemediating(true);
-                            await new Promise(r => setTimeout(r, 1500));
-                            setIsRemediating(false);
-                            toast.success("Security remediation workflow initiated!");
-                        }}
-                        disabled={isRemediating}
-                    >
-                        {isRemediating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : null}
-                        {isRemediating ? "Initializing Engine..." : "Remediate Vulnerabilities"}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="flex-1 sm:flex-none h-12 md:h-14 px-8 gap-3 bg-secondary/10 border-border/40 hover:bg-secondary/20 transition-all rounded-2xl group text-muted-foreground hover:text-primary"
+                            onClick={() => {
+                                console.log("Generating security report...");
+                                toast.info("Compiling security findings...");
+                            }}
+                        >
+                            <ShieldCheck className="h-5 w-5 transition-transform group-hover:scale-110" />
+                            <span className="uppercase font-black text-[10px] tracking-widest">Security Report</span>
+                        </Button>
+                        <Button
+                            variant="glow"
+                            size="lg"
+                            className="flex-1 sm:flex-none bg-primary text-primary-foreground font-black shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all h-12 md:h-14 px-8 text-base rounded-2xl"
+                            onClick={async () => {
+                                setIsRemediating(true);
+                                await new Promise(r => setTimeout(r, 1500));
+                                setIsRemediating(false);
+                                toast.success("Security remediation workflow initiated!");
+                            }}
+                            disabled={isRemediating}
+                        >
+                            {isRemediating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : null}
+                            {isRemediating ? "Initializing Engine..." : "Remediate Vulnerabilities"}
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Filter and Search */}

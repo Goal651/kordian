@@ -19,7 +19,8 @@ import {
     LayoutDashboard,
     Zap,
     TrendingUp,
-    ShieldCheck
+    ShieldCheck,
+    FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -76,9 +77,20 @@ export default function Page() {
                         <DateRangeSelector onDateRangeChange={updateDateRange} orgCreatedAt={state.orgCreatedAt} />
                     </div>
                     <Button
+                        variant="ghost"
+                        size="lg"
+                        className="h-12 px-6 gap-3 bg-secondary/10 border-border/40 hover:bg-secondary/20 hover:border-primary/30 transition-all rounded-2xl group text-muted-foreground hover:text-primary shrink-0"
+                        onClick={() => {
+                            // Professional report generation logic placeholder
+                            console.log("Generating infrastructure report...");
+                        }}>
+                        <FileText className="h-4 w-4 transition-transform group-hover:scale-110" />
+                        <span className="uppercase font-black text-[10px] tracking-widest">Generate Report</span>
+                    </Button>
+                    <Button
                         variant="glow"
                         size="lg"
-                        className="h-12 px-8 gap-3 bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-2xl group"
+                        className="h-12 px-8 gap-3 bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-2xl group shrink-0"
                         onClick={() => {
                             fetchOrgData(true);
                             fetchMembers(true);
