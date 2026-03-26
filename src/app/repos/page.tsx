@@ -251,7 +251,7 @@ export default function Page() {
                             key={repo.name}
                             className="glass-card p-6 md:p-8 hover:border-primary/40 transition-all cursor-pointer animate-fade-in group relative overflow-hidden active:scale-[0.985]"
                             style={{ animationDelay: `${0.15 + index * 0.05}s` }}
-                            onClick={() => router.push(`/repos/${state.selectedOrg}/${repo.name}`)}
+                            onClick={() => router.push(`/repos/${repo.name}`)}
                         >
                             {/* Decorative background element */}
                             <div className="absolute -right-4 -top-4 h-24 w-24 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
