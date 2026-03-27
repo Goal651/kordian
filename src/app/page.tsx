@@ -96,16 +96,15 @@ export default function Page() {
                         <span className="uppercase font-semibold text-xs ">Generate Report</span>
                     </Button>
                     <Button
-                        variant="glow"
-                        size="lg"
-                        className="h-12 px-8 gap-3 bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-lg group shrink-0"
+                        variant="default"
+                        className="h-12 px-8 gap-3 bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-lg group shrink-0"
                         onClick={() => {
                             fetchOrgData(true);
                             fetchMembers(true);
                             fetchSecurityAlerts(true);
                         }}>
                         <RefreshCw className={`h-4 w-4 transition-transform group-hover:rotate-180 duration-500 ${isRefreshing && "animate-spin"}`} />
-                        <span className="uppercase  text-[10px]">Initialize Scan</span>
+                        <span className="uppercase  text-xs">Initialize Scan</span>
                     </Button>
                 </div>
             </div>
