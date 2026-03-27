@@ -187,7 +187,7 @@ export default function Page() {
             <nav className="relative z-20 flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/5">
                 <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
-                        <Building2 className="h-4 w-4 text-cyan-400" />
+                        <img src="/icon.png" alt="logo" className="h-8 w-8" />
                     </div>
                     <span className="font-black text-white text-lg tracking-tight">kordian</span>
                 </div>
