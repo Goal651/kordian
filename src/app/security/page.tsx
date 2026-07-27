@@ -294,7 +294,7 @@ export default function Page() {
                         filteredAlerts.map((alert, idx) => (
                             <div
                                 key={idx}
-                                className="group/alert relative flex flex-col p-5 md:p-6 rounded bg-secondary/10 border border-border/40 hover:bg-secondary/20 hover:border-primary/20 transition-all animate-fade-in"
+                                className={`group/alert relative flex flex-col p-5 md:p-6 rounded bg-secondary/10 border border-border/40 ${alert.severity === 'critical' ? 'hover:border-destructive/20' : alert.severity === 'high' ? 'hover:border-warning/20' : 'hover:border-primary/20'} transition-all animate-fade-in`}
                                 style={{ animationDelay: `${idx * 0.05}s` }}
                             >
                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
@@ -319,7 +319,7 @@ export default function Page() {
                                                     {alert.severity} Risk
                                                 </div>
                                             </div>
-                                            <h3 className="text-md md:text-lg font-semibold text-foreground leading-tight group-hover/alert:text-primary transition-colors">{alert.title}</h3>
+                                            <h3 className={`text-md md:text-lg font-semibold text-foreground leading-tight group-hover/alert:${alert.severity === 'critical' ? 'text-destructive' : alert.severity === 'high' ? 'text-warning' : 'text-primary'} transition-colors`}>{alert.title}</h3>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground/70 bg-secondary/30 px-3 py-1 rounded border border-border/30">
                                                     <span className="opacity-40 select-none">PATH:</span>
